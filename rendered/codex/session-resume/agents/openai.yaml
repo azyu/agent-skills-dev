@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Resume"
+  short_description: "Resume work from recent Codex sessions"
+  default_prompt: "Use $session-resume to find the relevant recent Codex session and continue the work."

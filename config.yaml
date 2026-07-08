@@ -1,0 +1,37 @@
+version: 1
+targets:
+  agents:
+    path: ~/.agents/skills
+    method: symlink
+    enabled: true
+  claude:
+    path: ~/.claude/skills
+    method: symlink
+    enabled: true
+  codex:
+    path: ~/.codex/skills
+    method: symlink
+    enabled: true
+policies: {}
+skills:
+  recap:
+    path: skills/recap
+    expose: [claude, codex]
+  resume-session:
+    path: skills/resume-session
+    expose: [claude, codex]
+  setup-file-based-context:
+    path: skills/setup-file-based-context
+    expose: [claude, codex]
+  oracle-research:
+    path: skills/oracle-research
+    expose: [claude, codex]
+  obsidian-cli:
+    path: skills/obsidian-cli
+    expose: [claude, codex]
+  backlog:
+    path: skills/backlog
+    expose: [claude, codex]
+  codex-first:
+    path: skills/codex-first
+    expose: [claude]

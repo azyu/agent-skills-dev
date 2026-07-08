@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recap"
+  short_description: "Summarize recent work and update docs."
+  default_prompt: "Recap the recent work and update any documentation that should reflect it."
