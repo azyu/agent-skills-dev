@@ -32,6 +32,15 @@ skills:
   backlog:
     path: skills/backlog
     expose: [claude, codex]
-  codex-first:
-    path: skills/codex-first
+  bb-cli:
+    path: skills/bb-cli
+    expose: [claude, codex]
+  github-next:
+    path: skills/github-next
     expose: [claude]
+  setup-github-issue-based-context:
+    path: skills/setup-github-issue-based-context
+    expose: [claude, codex]
+  # codex-first:
+  #   path: skills/codex-first
+  #   expose: [claude]

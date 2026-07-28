@@ -7,7 +7,9 @@ description: "Route implementation work to Codex CLI as the Executor; Claude (Fa
 
 Claude Code sessions only. Codex/other harnesses: skip; never self-delegate.
 
-Rationale: Claude (Fable/Opus) tokens metered + expensive; Codex flat-rate. GPT-5.5+ is usually the better and faster model at writing/implementing code; Claude wins at ergonomics — judgment, design, spec-writing, review, orchestration. So Codex types, Claude thinks and verifies.
+Codex MCP is intentionally not configured. Use the `codex` CLI through Bash for Executor work; do not call or re-register `mcp__codex__*`.
+
+Rationale: Claude (Fable/Opus) tokens metered + expensive; Codex flat-rate. Codex Executor runs default to `gpt-5.6-sol`; use a different model only when the user explicitly requests it. Claude wins at ergonomics — judgment, design, spec-writing, review, orchestration. So Codex types, Claude thinks and verifies.
 
 ## Route
 
@@ -44,11 +46,12 @@ Prompt via temp file, never inline quoting:
 P=$(mktemp); cat >"$P" <<'EOF'
 <goal, repo + key paths, constraints ("don't touch X"), non-goals, proof expected, output shape>
 EOF
-codex exec -s workspace-write -C <repo> \
+codex exec -m gpt-5.6-sol -s workspace-write -C <repo> \
   -c model_reasoning_effort="xhigh" \
   -o "$SCRATCHPAD/codex-last.md" - <"$P" 2>/dev/null
 ```
 
+- `gpt-5.6-sol` is the house-default Codex Executor model. Pass `-m gpt-5.6-sol` on every fresh `codex exec`, even when `~/.codex/config.toml` already has the same default, so delegated runs remain explicit and auditable. Use another model only when the user explicitly requests it.
 - `-s workspace-write` is the house default — repo writes + command/test runs allowed. Network is already enabled for this mode via `[sandbox_workspace_write] network_access = true` in `~/.codex/config.toml`, so `pnpm install` etc. work. Passing `-s` explicitly matters: the global config default is `danger-full-access`, and this flag tightens it per-run.
 - `--dangerously-bypass-approvals-and-sandbox` (full bypass) only with explicit user approval.
 - `$SCRATCHPAD` = the session scratchpad dir from the system prompt; one `-o` file per run.
@@ -62,6 +65,7 @@ Follow-up fixes — cheaper than fresh runs, keeps context. `resume` has no `-C`
 
 ```bash
 (cd <repo> && codex exec resume --last \
+  -c model="gpt-5.6-sol" \
   -c sandbox_mode="workspace-write" \
   -c model_reasoning_effort="xhigh" \
   -o "$SCRATCHPAD/codex-last.md" - <"$P2" 2>/dev/null)
@@ -69,7 +73,7 @@ Follow-up fixes — cheaper than fresh runs, keeps context. `resume` has no `-C`
 
 ## Prompt contract
 
-Codex starts with zero session context. Every prompt: goal, exact repo/paths, constraints, non-goals, proof expected (exact test command), output shape ("report files changed + test output"). Spec quality decides success. The `codex:gpt-5-4-prompting` skill has model-specific prompt guidance.
+Codex starts with zero session context. Every prompt: goal, exact repo/paths, constraints, non-goals, proof expected (exact test command), output shape ("report files changed + test output"). Spec quality decides success. Do not downgrade from `gpt-5.6-sol` to use an older model-specific prompting workflow; use model-specific guidance only when it supports the selected model.
 
 ## Verify (Claude, always)
 
