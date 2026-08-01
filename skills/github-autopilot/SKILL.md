@@ -1,13 +1,13 @@
 ---
-name: github-next
-description: Use when starting a fresh session in a GitHub-based repository to pick ONE pending GitHub issue and execute it autonomously through a gated pipeline (plan → Codex plan review → Opus 5 implementation → DoD → Codex adversarial review → PR). Triggers — "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "autopilot". For JIRA-tracked projects use the project's jira-next skill instead. If human judgment becomes necessary mid-work, record the needed decision on the issue and hold.
+name: github-autopilot
+description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, isolated implementation, direct verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
-# GitHub Next (autonomous work pipeline)
+# GitHub Autopilot — Claude Code
 
 Pick **one** actionable issue from the current repo's GitHub Issues and drive it to completion through a gated pipeline. When a judgment fork appears, record it on the issue and hold.
 
-**Role split (fixed)**: orchestration + verification = this session / **implementation = Opus 5 subagent** (frozen spec) / plan review + adversarial review = Codex. Implementer and reviewer are separated to block self-review. If a personal routing rule delegates implementation to Codex, do not apply that rule inside this skill.
+Preferred routing: planning, architecture, orchestration, review, and integration use `gpt-5.6-sol` at `high`; one frozen implementation uses `gpt-5.6-luna` at `xhigh`. Claude Code cannot assign OpenAI models to native `Agent` descendants, so use separate Codex bridge calls when available. Otherwise preserve the same separation with the strongest native planning/review context, one bounded implementation agent, and fresh reviewers; report the actual routing.
 
 All issue operations use the `gh` CLI against the current repo context. Issue bodies and comments must never reference local machine paths or session-local artifacts — the issue must stand alone for the next session or a human.
 
@@ -33,8 +33,8 @@ If any is missing, stop at that stage — do not work around it.
 | Required | When missing |
 |---|---|
 | `gh auth status` OK + repo issue write access | Cannot operate issues → report and exit |
-| Codex CLI auth + `codex@openai-codex` plugin | Review gates impossible → Hold per §6.4 |
-| Opus 5 subagent available | Cannot delegate implementation → report and exit |
+| One bounded implementation context | Cannot isolate implementation → report and exit |
+| One fresh read-only review context | Review gate impossible → Hold per §6 |
 
 ## 0. Sweep (clean up my residual issues — once, before Pick)
 
@@ -76,10 +76,10 @@ If nothing qualifies, report "no executable work + reasons" and exit.
 
 ## 2. Claim (take the mutex)
 
-1. If `in-progress` is already present, another session owns it — move to the next candidate.
+1. Re-read the issue and comments. If `in-progress` is already present, another session owns it — move to the next candidate.
 2. Claim: `gh issue edit <n> --add-label in-progress --add-assignee @me`.
-3. Re-read the issue immediately after — if a competing start comment from another session is visible, yield and move on.
-4. Comment: `🤖 agent autonomous session started (YYYY-MM-DD). Plan: <1-2 lines>`.
+3. Post the repository-defined claim comment; default: `Claimed by Claude Code: <one-line plan>`.
+4. Re-read comments after posting. The earliest valid active claim wins. If another claim won, comment that this later claim is withdrawn and move on. Do not remove the shared label or assignee; they now protect the winner.
 
 ## 3. Verify premise (re-validate before working)
 
@@ -90,16 +90,16 @@ An issue is a point-in-time record. Re-confirm the body's file:line references a
 
 In both cases no work context has been consumed yet, so **only at this stage** pick one new candidate.
 
-## 4. Plan (gather context → plan → Codex plan review)
+## 4. Plan
 
 1. Collect related code, docs, tests, and adjacent callers based on the issue body.
 2. Write a plan file (`~/.claude/plans/`) — **self-contained, including a copy of the issue body (requirements + current state)**: implementation and verification must be able to proceed without re-fetching the issue if the network drops mid-work. Also **post a plan summary as an issue comment** — the next session/human must be able to take over from the issue alone.
-3. Plan review: delegate plan validity/gaps/alternatives via `Skill(codex:rescue)`. State **"review-only, no code changes/patches"** in the prompt.
+3. Review plan validity, gaps, and alternatives in a fresh read-only context. Prefer a separate Sol/high Codex bridge call; otherwise use a fresh native reviewer and report the fallback.
 4. Re-validate each feedback item on its merits and **accept selectively** (never wholesale), update the plan, proceed.
 
-## 5. Implement (delegate to Opus 5 subagent)
+## 5. Implement
 
-- `Agent(subagent_type: <domain agent if the repo defines one, else general-purpose>, model: "opus", run_in_background: false)`
+- Preferred: run a separate Luna/xhigh Codex bridge call. Native fallback: `Agent(subagent_type: <domain agent if defined, else general-purpose>, model: "opus", run_in_background: false)`. Report the actual route.
 - Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + core repo rules (TDD RED→GREEN, commit message convention, logging conventions — whatever the repo's CLAUDE.md/AGENTS.md mandates). The subagent has no session context — put everything it needs in the prompt.
 - After the subagent finishes, **the orchestrator re-verifies directly** with the repo's test and build commands. Nothing counts as done without fresh evidence.
 - If the working tree is dirty, use a worktree — run the repo's install step right after creating it (e.g. `CI=true pnpm install --frozen-lockfile` for pnpm repos), and note that npm-script wrappers may fail in worktrees; invoke the underlying runner directly if needed.
@@ -111,16 +111,9 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 ## 6. DoD + adversarial review gate
 
 1. Check the repo's Definition of Done (if none defined: tests + build + lint green), then commit.
-2. Run the adversarial review — `/codex:adversarial-review` is `disable-model-invocation`, so it cannot be called via the Skill tool. Run the companion script directly:
-
-   ```bash
-   SCRIPT=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)
-   node "$SCRIPT" adversarial-review --wait --base main
-   ```
-
-   **`--wait` is mandatory** — without it the default flow stops at AskUserQuestion waiting for a human.
+2. Run adversarial review in a fresh read-only context. Prefer a separate Sol/high Codex bridge call; otherwise use fresh native reviewers and report the fallback.
 3. BLOCKING findings → re-validate each on its merits, fix, re-review. **Max 2 re-reviews** — if still unresolved, Hold (treat as a design fork).
-4. If a review gate (including plan review) cannot run for infrastructure reasons (Codex CLI auth expired etc.) → **Hold**. Never create an autonomous PR without the review gate.
+4. If the review gate cannot run, Hold. Never create an autonomous PR without independent review.
 
 ## 7. Hold (when human judgment is needed)
 
@@ -158,12 +151,12 @@ All repo CLAUDE.md/AGENTS.md rules apply (plus personal instruction files if pre
 | Feature branch creation, commits, push | **Merging** PRs |
 | PR creation (body contains `Closes #N`) | Deploys, releases, version tag changes |
 | Issue label/assignee/comment/close-with-evidence | Executing shared DB migrations |
-| Opus 5 implementation subagent, Codex review delegation | rebase/force-push/history rewrites |
+| One isolated implementation agent and fresh review agents | rebase/force-push/history rewrites |
 | | Changes outside issue scope (file discoveries as new issues) |
 
 ## Principles
 
 - **One invocation = one work item.** Never chain multiple items (§3's single re-pick after premise-gone/mismatch is the only exception).
 - If the issue lacks the basis for a judgment, do not invent one — Hold. Autonomy is for speed, not unilateralism.
-- Separation of powers: Opus 5 builds, Codex refutes, the orchestrator rules on evidence.
+- Separation of powers: one agent builds, fresh reviewers refute, and the orchestrator rules on evidence.
 - Every trace (plan, hold reasons, review results, outcomes) goes on the issue — the next session/human must be able to take over from the issue alone.

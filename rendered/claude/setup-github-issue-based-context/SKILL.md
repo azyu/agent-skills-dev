@@ -26,7 +26,7 @@ Do not use for:
 
 - Non-GitHub trackers (Bitbucket, GitLab, Jira) — this skill assumes the `gh` CLI.
 - Durable constraints and decision logs — those belong in `.context/STEERING.md` (use `setup-file-based-context`).
-- Executing work against an existing setup — that is a session-execution workflow (e.g. `github-next`), not setup.
+- Executing work against an existing setup — that is a session-execution workflow (e.g. `github-autopilot`), not setup.
 
 ## Standard Structure
 
@@ -80,15 +80,25 @@ Open issues labeled `backlog` are the actionable queue. Before starting any task
 2. Read the issue with `gh issue view <n> --comments`. If none was given, pick from
    `gh issue list --state open --label backlog`, or open a new issue first.
 
-Claim before implementing: `gh issue edit <n> --add-assignee @me` plus a comment
-`Claimed by <agent-name>: <one-line plan>`, then re-read the comments to confirm no
-competing claim landed after yours. The comment identifies the owner — agents may
-share one authenticated account, so the assignee alone does not.
+Claim before implementing:
 
-On completion: comment the verification results on the issue, then close it once the
-work has landed — immediately for a direct commit, only after merge when it went
-through a PR. Open `backlog` issues are the queue; closing at PR creation drops
-unfinished work out of it.
+1. `gh issue edit <n> --add-label in-progress --add-assignee @me`.
+2. Comment `Claimed by <agent-name>: <one-line plan>`.
+3. Re-read the comments after posting. The earliest active claim wins. If another
+   claim landed first, comment that this later claim is withdrawn and move to
+   another issue. Do not remove the shared label or assignee: that would erase the
+   winner's mutex. The comment identifies the owner — agents may share one
+   authenticated account, so the assignee alone does not.
+
+On completion, comment the verification results and transition the issue:
+
+- Directly landed work: remove `in-progress`, then close the issue.
+- PR workflow: remove `in-progress`, add `awaiting-review`, and leave the issue
+  open until merge. `Closes #<n>` in the PR performs the close.
+- Hold: remove `in-progress`, unassign, and add `needs-decision` or `blocked`.
+
+Open `backlog` issues are the queue; closing at PR creation drops unfinished work
+out of it.
 
 Open follow-up issues for remaining work and cross-link them and the closed issue by
 number in both directions.

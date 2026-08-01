@@ -34,13 +34,16 @@ skills:
     expose: [claude, codex]
   bb-cli:
     path: skills/bb-cli
-    expose: [claude, codex]
-  github-next:
-    path: skills/github-next
-    expose: [claude]
+    expose: [agents, claude, codex]
+  github-autopilot:
+    path: skills/github-autopilot
+    expose: [agents, claude, codex]
+  jira-autopilot:
+    path: skills/jira-autopilot
+    expose: [agents, claude, codex]
   setup-github-issue-based-context:
     path: skills/setup-github-issue-based-context
-    expose: [claude, codex]
+    expose: [agents, claude, codex]
   # codex-first:
   #   path: skills/codex-first
   #   expose: [claude]
