@@ -1,15 +1,15 @@
 version: 1
 targets:
-  agents:
-    path: ~/.agents/skills
-    method: symlink
-    enabled: true
   claude:
     path: ~/.claude/skills
     method: symlink
     enabled: true
   codex:
-    path: ~/.codex/skills
+    path: ~/.agents/skills
+    method: symlink
+    enabled: true
+  omp:
+    path: ~/.omp/skills
     method: symlink
     enabled: true
 policies: {}
@@ -34,16 +34,16 @@ skills:
     expose: [claude, codex]
   bb-cli:
     path: skills/bb-cli
-    expose: [agents, claude, codex]
+    expose: [claude, codex]
   github-autopilot:
     path: skills/github-autopilot
-    expose: [agents, claude, codex]
+    expose: [claude, codex, omp]
   jira-autopilot:
     path: skills/jira-autopilot
-    expose: [agents, claude, codex]
+    expose: [claude, codex]
   setup-github-issue-based-context:
     path: skills/setup-github-issue-based-context
-    expose: [agents, claude, codex]
+    expose: [claude, codex]
   # codex-first:
   #   path: skills/codex-first
   #   expose: [claude]
