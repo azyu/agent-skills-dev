@@ -38,6 +38,12 @@ skills:
   github-autopilot:
     path: skills/github-autopilot
     expose: [claude, codex, omp]
+  herdr-orchestration:
+    path: skills/herdr-orchestration
+    expose: [claude, codex, omp]
+  herdr:
+    path: skills/herdr
+    expose: [claude, codex, omp]
   jira-autopilot:
     path: skills/jira-autopilot
     expose: [claude, codex]

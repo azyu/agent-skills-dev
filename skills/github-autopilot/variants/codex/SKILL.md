@@ -1,6 +1,6 @@
 ---
 name: github-autopilot
-description: Use in Codex to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, implementation, verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in Codex to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, implementation, evidence-backed verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — Codex
@@ -24,6 +24,8 @@ A normal Codex invocation cannot change descendants to those per-role profiles. 
 Use Multi-agent only for independent bounded work. Plan → implementation → review is an ordered pipeline and must remain sequential. Never let concurrent agents edit the same worktree.
 
 All issue operations use `gh` against the current repository. Issue bodies and comments must not reference local machine paths or session artifacts.
+
+If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles.
 
 ## State model
 
@@ -113,7 +115,7 @@ For a complex plan, use at most three independent bounded agents for code-path m
 
 Preferred: run a separate top-level implementation phase on Luna/xhigh. Fallback inside one hosted tree: spawn one implementation worker on the shared Sol/high profile and record the fallback.
 
-The implementation prompt is a frozen contract: full plan, issue requirements, repository rules, allowed scope, and verification commands. Use one writable worker and one worktree. The orchestrator must not edit concurrently.
+The implementation prompt is a frozen contract: full plan, issue requirements, repository rules, allowed scope, and verification commands. Use one writable worker and one worktree. The orchestrator must not edit implementation or test files. Every implementation or test change, including remediation after verification or adversarial review, returns to this same implementation context; if it cannot be resumed, hold.
 
 Branch from the remote default branch, discovered with:
 
@@ -123,7 +125,7 @@ gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
 
 Fetch before branching. If the local default branch is ahead of its remote, present the commits and hold for the user's base choice; never push the default branch autonomously. Follow repository branch conventions, otherwise use `<type>/issue-<n>-<slug>`.
 
-After implementation, the orchestrator directly runs the changed path and the repository's relevant verification commands. Agent claims are not evidence.
+After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries are not evidence: the orchestrator inspects exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 
 ## 6. Adversarial review
 
@@ -139,7 +141,7 @@ Spawn exactly three read-only reviewers when the change is non-trivial:
 
 Each finding must include severity, evidence, file/line reference, plausible failure scenario, and verification method. The review root deduplicates findings and rejects unsupported speculation.
 
-Re-validate every blocking finding against code. Fix confirmed blockers, rerun verification, and repeat review at most twice. If confirmed blockers remain after two re-reviews, hold as a design fork. Escalate review above `high` only for security, irreversible data, tenant isolation, or corruption risk.
+Re-validate every blocking finding against code. Return confirmed implementation/test changes to the same implementation context, rerun every affected automated and runtime gate, and repeat review at most twice. If the implementation context cannot be resumed or confirmed blockers remain after two re-reviews, hold. Escalate review above `high` only for security, irreversible data, tenant isolation, or corruption risk.
 
 ## 7. Hold
 
@@ -164,8 +166,8 @@ Only after implementation, smoke test, repository checks, and adversarial review
 
 ## Boundaries
 
-Allowed: issue metadata, feature branches, scoped code changes, tests/build/lint, commits, branch push, PR creation.
+Allowed: selected-issue metadata, feature branches, scoped code changes by one implementation writer, supervised verification process panes, an optional fresh runtime Verifier, fresh review agents, commits, branch push, and PR creation.
 
-Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, or unrelated cleanup.
+Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, unrelated cleanup, orchestrator/Verifier/Reviewer implementation edits, or creation/update of GitHub Issues unrelated to the selected work item.
 
-One invocation owns one issue. Every durable handoff belongs on the issue. Autonomy never authorizes inventing missing policy.
+One invocation owns one issue. Every issue-related durable handoff belongs on the selected issue. Agent instructions, orchestration guidance, shared skills, and other unrelated changes stay out of that issue and PR and are reported separately.

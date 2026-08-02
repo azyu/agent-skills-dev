@@ -11,6 +11,8 @@ Preferred routing: planning, architecture, orchestration, review, and integratio
 
 All issue operations use the `gh` CLI against the current repo context. Issue bodies and comments must never reference local machine paths or session-local artifacts — the issue must stand alone for the next session or a human.
 
+If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles.
+
 ## State model (labels replace JIRA workflow states)
 
 GitHub issues are only open/closed, so workflow states are modeled with labels:
@@ -101,7 +103,7 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 
 - Preferred: run a separate Luna/xhigh Codex bridge call. Native fallback: `Agent(subagent_type: <domain agent if defined, else general-purpose>, model: "opus", run_in_background: false)`. Report the actual route.
 - Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + core repo rules (TDD RED→GREEN, commit message convention, logging conventions — whatever the repo's CLAUDE.md/AGENTS.md mandates). The subagent has no session context — put everything it needs in the prompt.
-- When repository routing uses an interactive OMP Implementer in an isolated issue worktree, start that bounded writer with `--approval-mode yolo`. Reviewers remain read-only and approval-gated by default; when repository instructions explicitly require a `yolo` Reviewer, use their restricted tool allowlist and prompt, then verify HEAD and tracked state before and after every turn. If any role starts with the wrong approval mode, preserve its context: obtain its session path from the agent runtime, dismiss approval UI, exit with `/quit`, then restart the same pane/name/model/thinking with `--resume=<session-path>` and the required approval mode.
+- When repository routing uses an interactive OMP Implementer in an isolated issue worktree, start that bounded writer with `--approval-mode yolo`. Reviewers remain read-only and approval-gated by default; when the active user orchestration policy requires a `yolo` Reviewer, use its restricted tool allowlist and prompt, then verify HEAD and tracked state before and after every turn. If any role starts with the wrong approval mode, preserve its context: obtain its session path from the agent runtime, dismiss approval UI, exit with `/quit`, then restart the same pane/name/model/thinking with `--resume=<session-path>` and the required approval mode.
 - The `yolo` permission changes tool prompting, not scope or authority. An Implementer's frozen prompt must prohibit issue/PR writes, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review; only scoped worktree edits and bounded implementation checks are allowed.
 - Every implementation or test change, including remediation after verification or adversarial review, returns to the same implementation context. The orchestrator, Verifier, and Reviewer never edit issue implementation files. If the Implementer cannot be resumed, Hold instead of creating a second writer or patching directly.
 - After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries alone do not count: the orchestrator must inspect exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.

@@ -1,6 +1,6 @@
 ---
 name: github-autopilot
-description: Use in OMP to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, GPT implementation worker, direct verification, GPT adversarial reviewers, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in OMP to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, GPT implementation worker, evidence-backed verification, GPT adversarial reviewers, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — OMP
@@ -17,6 +17,7 @@ Use OMP's native role and per-agent routing:
 | Plan | `openai-codex/gpt-5.6-sol:high` | scope, invariants, frozen contract |
 | Implementation `task` agent | `openai-codex/gpt-5.6-luna:xhigh` | one bounded writable change |
 | `reviewer` agent | `openai-codex/gpt-5.6-sol:high` | read-only adversarial review |
+| Runtime Verifier | `openai-codex/gpt-5.6-sol:high` | fresh runtime/browser acceptance observations only |
 | `scout` | `openai-codex/gpt-5.6-luna:medium` | read-only code mapping |
 | `librarian` | `openai-codex/gpt-5.6-terra:medium` | source-verified external API research |
 
@@ -43,9 +44,11 @@ task:
 
 Keep planning, architecture, orchestration, review, and integration on Sol/high. Give only the frozen implementation contract to Luna/xhigh. Escalate review above high only for security, tenant isolation, irreversible data, or corruption risk.
 
-OMP agents start without conversation history. Every task prompt must carry its complete bounded contract. The main orchestrator owns GitHub state, planning decisions, validation, commits, and PR creation. Implementation and review agents never self-certify completion.
+OMP agents start without conversation history. Every task prompt must carry its complete bounded contract. The main orchestrator owns GitHub state, planning decisions, verification orchestration and raw-evidence adjudication, commits, and PR creation. Implementation and review agents never self-certify completion.
 
 All issue operations use `gh` against the current repository. Issue bodies and comments must not reference local machine paths, `local://`, `agent://`, transcripts, or other session artifacts.
+
+If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles. Its interactive Herdr role topology replaces the native task/reviewer routing where the two conflict.
 
 ## State model
 
@@ -143,6 +146,8 @@ The task contract must include:
 
 The implementation agent must not update the issue, commit, push, create a PR, or review its own work.
 
+Every implementation or test change, including remediation after verification or adversarial review, returns to this same implementation context. The orchestrator, Verifier, and Reviewer never edit implementation or test files. If the implementation context cannot be resumed, hold instead of creating a second writer or patching directly.
+
 Branch from the remote default branch, discovered with:
 
 ```bash
@@ -151,7 +156,7 @@ gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
 
 Fetch before branching. If the local default branch is ahead of its remote, present the commits and hold for the user's base choice; never push the default branch autonomously. Follow repository branch conventions, otherwise use `<type>/issue-<n>-<slug>`.
 
-After the worker finishes, inspect its bounded result and directly run the changed path, relevant tests, build, and lint required by the repository. Agent output is not verification evidence.
+After the worker settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries do not count: the orchestrator inspects exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 
 ## 6. Adversarial review
 
@@ -165,7 +170,7 @@ For a non-trivial change, batch exactly three reviewers:
 
 Every review task must state: review-only, no edits, no formatter/lint/tests, and no project-wide commands. Each finding must include severity, evidence, file/line reference, plausible failure scenario, and verification method.
 
-The orchestrator consolidates results, rejects unsupported speculation, and re-validates blocking findings against code. Send confirmed fixes to one Luna/xhigh implementation agent, then rerun direct verification and fresh review. Allow at most two re-reviews. If confirmed blockers remain, hold as a design fork.
+The orchestrator consolidates results, rejects unsupported speculation, and re-validates blocking findings against code. Return confirmed implementation/test changes to the same Luna/xhigh implementation context, then rerun every affected automated and runtime gate and fresh review. Allow at most two re-reviews. If the implementation context cannot be resumed or confirmed blockers remain, hold.
 
 A trivial mechanical change may use one reviewer, but the final report must state that reduced review shape. Escalate beyond `high` only for security, irreversible data, tenant isolation, or corruption risks.
 
@@ -192,8 +197,8 @@ Only after implementation, smoke test, repository checks, and adversarial review
 
 ## Boundaries
 
-Allowed: issue metadata, feature branches, scoped code changes, direct tests/build/lint, commits, branch push, PR creation, bounded OMP task/reviewer delegation.
+Allowed: selected-issue metadata, feature branches, scoped code changes by one implementation writer, supervised verification process panes, an optional fresh runtime Verifier, fresh review agents, commits, branch push, and PR creation.
 
-Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, unrelated cleanup, or parallel writers on one worktree.
+Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, unrelated cleanup, orchestrator/Verifier/Reviewer implementation edits, or creation/update of GitHub Issues unrelated to the selected work item.
 
-One invocation owns one issue. Every durable handoff belongs on the issue. Autonomy never authorizes inventing missing policy.
+One invocation owns one issue. Every issue-related durable handoff belongs on the selected issue. Agent instructions, orchestration guidance, shared skills, and other unrelated changes stay out of that issue and PR and are reported separately. Autonomy never authorizes inventing missing policy.

@@ -1,6 +1,6 @@
 ---
 name: github-autopilot
-description: Use in Codex to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, implementation, verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in Codex to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, implementation, evidence-backed verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", and "autopilot". If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — Codex
@@ -25,21 +25,7 @@ Use Multi-agent only for independent bounded work. Plan → implementation → r
 
 All issue operations use `gh` against the current repository. Issue bodies and comments must not reference local machine paths or session artifacts.
 
-## Worker lifecycle
-
-Orca Task completion and terminal liveness are separate: `worker_done` does not close a terminal. After consuming a terminal Dispatch's result and confirming that no follow-up is assigned, stop that exact worker terminal with the version-matched Orca orchestration command. Preserve Run Tasks, messages, and provider session history; terminal cleanup never means orchestration reset or JSONL deletion.
-
-One feature Run contains only work needed for its owned issue. Process-skill edits, benchmark cohorts, and control/baseline experiments are separate work items in a later Run. Record the discovery and defer it instead of expanding the feature Run.
-
-At phase and Run boundaries:
-
-- Stop completed planning workers after the frozen plan consumes their findings.
-- Stop implementation and review workers after their results or requested fixes are consumed.
-- Keep the coordinator and any terminal with an explicit pending follow-up.
-- Retain an unmerged, dirty, blocked, or user-pinned feature worktree.
-- After a later Sweep proves the PR merged and the Orca worktree is clean, remove that landed worktree through Orca.
-
-Closing terminals must not erase durable issue comments, Task results, or resumable provider history.
+If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles.
 
 ## State model
 
@@ -63,30 +49,7 @@ Stop at the failing stage instead of weakening the workflow:
 - Codex Multi-agent is available for independent implementation/review contexts.
 - The active model profile satisfies the runtime contract above. If phase-specific top-level calls are unavailable, explicitly record the Sol/high fallback in the final report.
 
-## 0. Refresh base
-
-Before Sweep, Pick, Claim, or any issue mutation, refresh the repository's actual remote default branch:
-
-```bash
-default_branch="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
-git fetch origin "$default_branch"
-git rev-parse "origin/$default_branch"
-```
-
-Record the fetched remote commit as the planning base. If a local branch with that name exists, compare it with the refreshed remote:
-
-```bash
-git rev-list --left-right --count "$default_branch...origin/$default_branch"
-git log --oneline "origin/$default_branch..$default_branch"
-```
-
-- No local-only commits: continue. A behind local branch is not the implementation base; use the refreshed remote branch.
-- Any local-only commits or divergence: show the commits and hold for the user's base choice before sweeping or changing issue state. Never rewrite or push the default branch.
-- Fetch, authentication, or default-branch discovery failure: stop at this preflight gate.
-
-Do not reuse a fetch from an earlier session. The frozen plan must name the fetched remote commit it was validated against.
-
-## 1. Sweep
+## 0. Sweep
 
 Before picking, inspect residual issues owned by this account:
 
@@ -94,7 +57,7 @@ Before picking, inspect residual issues owned by this account:
 - `in-progress`: do not take work owned by another active session. If a linked PR is open, switch to `awaiting-review`. If the claim is at least 3 days old with no branch or PR evidence, comment the evidence, remove `in-progress`, and unassign.
 - `needs-decision`: remove the label only when a human decision appears after the hold comment.
 
-## 2. Pick
+## 1. Pick
 
 List oldest actionable candidates:
 
@@ -115,14 +78,14 @@ For an objective external blocker, add `blocked` with evidence. For unclear or u
 
 If none qualifies, report the candidates and concrete reasons, then stop.
 
-## 3. Claim
+## 2. Claim
 
 1. Re-read the issue and comments.
 2. Add `in-progress` and assign `@me`.
 3. Post the repository-defined claim comment; default: `Claimed by Codex: <one-line plan>`.
 4. Re-read comments after posting. The earliest valid active claim wins. If another claim won, comment that this later claim is withdrawn and choose the next candidate. Do not remove the shared label or assignee; they now protect the winner.
 
-## 4. Verify premise
+## 3. Verify premise
 
 Re-confirm every material code claim and file reference in the issue.
 
@@ -131,7 +94,7 @@ Re-confirm every material code claim and file reference in the issue.
 
 Only premise failure permits one replacement pick. After planning starts, hold instead of consuming another issue.
 
-## 5. Plan
+## 4. Plan
 
 Keep orchestration on Sol/high. Gather only the code, callers, tests, rules, and documentation needed for the issue.
 
@@ -148,25 +111,23 @@ Post a durable summary to the issue. Local plan storage is optional; never make 
 
 For a complex plan, use at most three independent bounded agents for code-path mapping, test mapping, and plan criticism. They share the current request model and reasoning. The root validates findings and freezes one plan; subagents do not edit code.
 
-## 6. Implement
+## 5. Implement
 
 Preferred: run a separate top-level implementation phase on Luna/xhigh. Fallback inside one hosted tree: spawn one implementation worker on the shared Sol/high profile and record the fallback.
 
-The implementation prompt is a frozen contract: full plan, issue requirements, repository rules, allowed scope, and verification commands. Use one writable worker and one worktree. The orchestrator must not edit concurrently.
+The implementation prompt is a frozen contract: full plan, issue requirements, repository rules, allowed scope, and verification commands. Use one writable worker and one worktree. The orchestrator must not edit implementation or test files. Every implementation or test change, including remediation after verification or adversarial review, returns to this same implementation context; if it cannot be resumed, hold.
 
-Immediately before creating the feature branch, fetch the default branch again and compare its remote commit with the planning base:
+Branch from the remote default branch, discovered with:
 
 ```bash
-default_branch="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
-git fetch origin "$default_branch"
-git rev-parse "origin/$default_branch"
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
 ```
 
-If the remote commit changed after planning, re-verify the issue premise and every affected plan reference against the refreshed remote before branching. If it did not change, branch from the exact refreshed remote commit. Follow repository branch conventions, otherwise use `<type>/issue-<n>-<slug>`.
+Fetch before branching. If the local default branch is ahead of its remote, present the commits and hold for the user's base choice; never push the default branch autonomously. Follow repository branch conventions, otherwise use `<type>/issue-<n>-<slug>`.
 
-After implementation, the orchestrator directly runs the changed path and the repository's relevant verification commands. Agent claims are not evidence.
+After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries are not evidence: the orchestrator inspects exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 
-## 7. Adversarial review
+## 6. Adversarial review
 
 Review must use a fresh context that receives only the frozen requirements, base branch, diff, changed code, and verification evidence. It must not receive the implementer's rationale except where recorded as a requirement.
 
@@ -180,9 +141,9 @@ Spawn exactly three read-only reviewers when the change is non-trivial:
 
 Each finding must include severity, evidence, file/line reference, plausible failure scenario, and verification method. The review root deduplicates findings and rejects unsupported speculation.
 
-Re-validate every blocking finding against code. Fix all confirmed blockers in one consolidated implementation pass and rerun verification. Re-review the confirmed findings and affected paths; do not automatically spawn another full three-reviewer wave. Permit one final integrated read-only review, and keep the hard ceiling of two re-reviews. If confirmed blockers remain after that ceiling, hold as a design fork. Escalate review above `high` only for security, irreversible data, tenant isolation, or corruption risk.
+Re-validate every blocking finding against code. Return confirmed implementation/test changes to the same implementation context, rerun every affected automated and runtime gate, and repeat review at most twice. If the implementation context cannot be resumed or confirmed blockers remain after two re-reviews, hold. Escalate review above `high` only for security, irreversible data, tenant isolation, or corruption risk.
 
-## 8. Hold
+## 7. Hold
 
 Hold for a product/design fork, unverifiable result, scope at least twice the issue, destructive action, unresolved blocking review, or unavailable mandatory gate.
 
@@ -193,7 +154,7 @@ Hold for a product/design fork, unverifiable result, scope at least twice the is
 
 If a GitHub write fails, retry once. Preserve the intended update in durable local state and report it; never discard code or verification results.
 
-## 9. Report and PR
+## 8. Report and PR
 
 Only after implementation, smoke test, repository checks, and adversarial review pass:
 
@@ -201,13 +162,12 @@ Only after implementation, smoke test, repository checks, and adversarial review
 2. Create a PR whose body contains `Closes #<n>`, verification evidence, and the actual review profile used.
 3. Comment the result, PR link, and verification evidence on the issue.
 4. Remove `in-progress`, add `awaiting-review`, and leave the issue open until merge.
-5. After those durable writes succeed, stop every completed worker terminal whose result was consumed and which has no pending follow-up. Keep the coordinator and retain the open PR's feature worktree.
-6. Report issue, change, evidence, review findings/resolution, model/reasoning profile, PR, worker cleanup, and remaining human action.
+5. Report issue, change, evidence, review findings/resolution, model/reasoning profile, PR, and remaining human action.
 
 ## Boundaries
 
-Allowed: issue metadata, feature branches, scoped code changes, tests/build/lint, commits, branch push, PR creation.
+Allowed: selected-issue metadata, feature branches, scoped code changes by one implementation writer, supervised verification process panes, an optional fresh runtime Verifier, fresh review agents, commits, branch push, and PR creation.
 
-Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, or unrelated cleanup.
+Forbidden: default-branch push, PR merge, deploy/release/tag, shared migration execution, destructive data changes, force-push/history rewrite, unrelated cleanup, orchestrator/Verifier/Reviewer implementation edits, or creation/update of GitHub Issues unrelated to the selected work item.
 
-One invocation owns one issue. Every durable handoff belongs on the issue. Autonomy never authorizes inventing missing policy.
+One invocation owns one issue. Every issue-related durable handoff belongs on the selected issue. Agent instructions, orchestration guidance, shared skills, and other unrelated changes stay out of that issue and PR and are reported separately.
