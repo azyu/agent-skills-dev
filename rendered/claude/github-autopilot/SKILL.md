@@ -1,6 +1,6 @@
 ---
 name: github-autopilot
-description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, isolated implementation, direct verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, isolated implementation, evidence-backed verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — Claude Code
@@ -101,7 +101,10 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 
 - Preferred: run a separate Luna/xhigh Codex bridge call. Native fallback: `Agent(subagent_type: <domain agent if defined, else general-purpose>, model: "opus", run_in_background: false)`. Report the actual route.
 - Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + core repo rules (TDD RED→GREEN, commit message convention, logging conventions — whatever the repo's CLAUDE.md/AGENTS.md mandates). The subagent has no session context — put everything it needs in the prompt.
-- After the subagent finishes, **the orchestrator re-verifies directly** with the repo's test and build commands. Nothing counts as done without fresh evidence.
+- When repository routing uses an interactive OMP Implementer in an isolated issue worktree, start that bounded writer with `--approval-mode yolo`. Reviewers remain read-only and approval-gated by default; when repository instructions explicitly require a `yolo` Reviewer, use their restricted tool allowlist and prompt, then verify HEAD and tracked state before and after every turn. If any role starts with the wrong approval mode, preserve its context: obtain its session path from the agent runtime, dismiss approval UI, exit with `/quit`, then restart the same pane/name/model/thinking with `--resume=<session-path>` and the required approval mode.
+- The `yolo` permission changes tool prompting, not scope or authority. An Implementer's frozen prompt must prohibit issue/PR writes, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review; only scoped worktree edits and bounded implementation checks are allowed.
+- Every implementation or test change, including remediation after verification or adversarial review, returns to the same implementation context. The orchestrator, Verifier, and Reviewer never edit issue implementation files. If the Implementer cannot be resumed, Hold instead of creating a second writer or patching directly.
+- After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries alone do not count: the orchestrator must inspect exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 - If the working tree is dirty, use a worktree — run the repo's install step right after creating it (e.g. `CI=true pnpm install --frozen-lockfile` for pnpm repos), and note that npm-script wrappers may fail in worktrees; invoke the underlying runner directly if needed.
 - Branch: follow the repo's branch conventions; default `<type>/issue-<n>-<slug>` where `<type>` matches the repo's allowed prefixes. **Always branch from the up-to-date default branch**:
   - Before branching, check `git rev-list --count origin/main..main` (after `git fetch`). If the local default branch is **ahead of origin**, those unpushed commits would ride into the PR diff — and pushing the default branch is in the forbidden column, so this is one of the few points where the skill stops to ask: present the unpushed commits and let the user choose (push main first / branch from local main anyway / branch from origin/main). Do not pick silently — if the pending work touches the same files as the issue, the base choice changes what you implement.
@@ -110,10 +113,10 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 
 ## 6. DoD + adversarial review gate
 
-1. Check the repo's Definition of Done (if none defined: tests + build + lint green), then commit.
+1. Run the repo's Definition of Done (if none defined: tests + build + lint green), inspect the raw evidence, complete any required runtime verification, and confirm no verification role changed tracked files; then commit.
 2. Run adversarial review in a fresh read-only context. Prefer a separate Sol/high Codex bridge call; otherwise use fresh native reviewers and report the fallback.
-3. BLOCKING findings → re-validate each on its merits, fix, re-review. **Max 2 re-reviews** — if still unresolved, Hold (treat as a design fork).
-4. If the review gate cannot run, Hold. Never create an autonomous PR without independent review.
+3. BLOCKING findings → re-validate each on its merits, return confirmed implementation/test changes to the same Implementer, rerun every affected automated and runtime gate, commit, and re-review. **Max 2 re-reviews** — if still unresolved, Hold (treat as a design fork).
+4. If a required verification or review gate cannot run, Hold. Never create an autonomous PR without both fresh verification evidence and independent review.
 
 ## 7. Hold (when human judgment is needed)
 
@@ -151,12 +154,13 @@ All repo CLAUDE.md/AGENTS.md rules apply (plus personal instruction files if pre
 | Feature branch creation, commits, push | **Merging** PRs |
 | PR creation (body contains `Closes #N`) | Deploys, releases, version tag changes |
 | Issue label/assignee/comment/close-with-evidence | Executing shared DB migrations |
-| One isolated implementation agent and fresh review agents | rebase/force-push/history rewrites |
-| | Changes outside issue scope (file discoveries as new issues) |
+| One isolated implementation agent, optional fresh runtime Verifier, and fresh review agents | rebase/force-push/history rewrites |
+| | Changes outside the selected issue scope or creation/update of unrelated GitHub Issues |
 
 ## Principles
 
 - **One invocation = one work item.** Never chain multiple items (§3's single re-pick after premise-gone/mismatch is the only exception).
 - If the issue lacks the basis for a judgment, do not invent one — Hold. Autonomy is for speed, not unilateralism.
-- Separation of powers: one agent builds, fresh reviewers refute, and the orchestrator rules on evidence.
-- Every trace (plan, hold reasons, review results, outcomes) goes on the issue — the next session/human must be able to take over from the issue alone.
+- Separation of powers: one agent writes, supervised process panes produce deterministic evidence, an optional fresh Verifier exercises runtime acceptance, fresh Reviewers refute, and the orchestrator adjudicates raw evidence.
+- Every issue-related trace (plan, hold reasons, review results, outcomes) goes on the selected issue so the next session or human can take over from it.
+- During an Autopilot invocation, do not create or update GitHub Issues for changes that are not directly part of the selected work item, including agent instructions, orchestration guidance, and shared skills. Keep those changes out of the selected issue and PR, and report them separately.
