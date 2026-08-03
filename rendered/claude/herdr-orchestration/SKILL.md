@@ -1,14 +1,15 @@
 ---
 name: herdr-orchestration
-description: Use when HERDR_ENV=1 and an applicable repository instruction or workflow such as GitHub Autopilot routes implementation, verification, or review through Herdr. Defines user-level role, model, approval, verification, and single-writer policy across repositories.
+description: Optional Herdr adapter for workflows that explicitly require persistent coordination across independent interactive agent processes, lifecycle or approval-state control, or cross-runtime relaying. HERDR_ENV=1 indicates availability only and does not activate this skill.
 ---
 
 # Herdr Orchestration
 
-Apply this user-level policy when a workflow explicitly routes coding agents through Herdr. Matching this skill is the user's stored authorization for that workflow-directed use. Read `skill://herdr` only for the installed CLI mechanics; its generic activation gate does not override this narrower user policy, and this skill owns the user's orchestration policy rather than Herdr's upstream command reference.
+Apply this user-level policy only when the user, repository, or active workflow explicitly selects Herdr because native OMP or separate Codex orchestration cannot provide the required cross-process persistence, lifecycle control, interactive-state handling, or runtime relay cleanly. Do not select Herdr merely because delegation, parallel work, or `HERDR_ENV=1` is present. Matching this skill is the user's stored authorization for explicitly routed Herdr use. Read `skill://herdr` only for the installed CLI mechanics; this skill owns the user's Herdr adapter policy rather than the generic orchestration design.
 
 ## Preconditions
 
+- Confirm that Herdr was explicitly selected or that the workflow records a concrete external-process requirement; availability alone is insufficient.
 - Verify `HERDR_ENV=1` before issuing Herdr control commands.
 - Follow the active repository's scope, issue, worktree, and verification rules. This skill does not weaken them.
 - Use the workflow-created isolated worktree when one exists. Otherwise preserve the current working directory unless the user requested another location.

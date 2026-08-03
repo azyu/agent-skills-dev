@@ -1,17 +1,17 @@
 ---
 name: github-autopilot
-description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (plan, isolated implementation, evidence-backed verification, adversarial review, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (Fable 5 planning and review, Opus 5 implementation, evidence-backed verification, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — Claude Code
 
 Pick **one** actionable issue from the current repo's GitHub Issues and drive it to completion through a gated pipeline. When a judgment fork appears, record it on the issue and hold.
 
-Preferred routing: planning, architecture, orchestration, review, and integration use `gpt-5.6-sol` at `high`; one frozen implementation uses `gpt-5.6-luna` at `xhigh`. Claude Code cannot assign OpenAI models to native `Agent` descendants, so use separate Codex bridge calls when available. Otherwise preserve the same separation with the strongest native planning/review context, one bounded implementation agent, and fresh reviewers; report the actual routing.
+Preferred Claude Code role routing: planning, architecture, orchestration, runtime verification, adversarial review, and integration use fresh `Fable 5` contexts; one frozen implementation uses `Opus 5`. Preserve fresh-context separation and the single-writer boundary even when an exact model assignment is temporarily unavailable, and always report the actual routing.
 
 All issue operations use the `gh` CLI against the current repo context. Issue bodies and comments must never reference local machine paths or session-local artifacts — the issue must stand alone for the next session or a human.
 
-If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles.
+Herdr is an optional external-process control plane, not a prerequisite for this workflow. Claude Code's native Agent orchestration is the default when it can preserve the model routing, fresh contexts, and single-writer boundary above. Use Herdr only when the user or repository explicitly requests it, or when persistent coordination across independent interactive agent processes, lifecycle/approval-state control, or cross-runtime relaying is concretely required. `HERDR_ENV=1` indicates availability only and MUST NOT activate Herdr by itself. When Herdr is selected, read and follow `skill://herdr-orchestration`.
 
 ## State model (labels replace JIRA workflow states)
 
@@ -95,18 +95,18 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 ## 4. Plan
 
 1. Collect related code, docs, tests, and adjacent callers based on the issue body.
-2. Write a plan file (`~/.claude/plans/`) — **self-contained, including a copy of the issue body (requirements + current state)**: implementation and verification must be able to proceed without re-fetching the issue if the network drops mid-work. Also **post a plan summary as an issue comment** — the next session/human must be able to take over from the issue alone.
-3. Review plan validity, gaps, and alternatives in a fresh read-only context. Prefer a separate Sol/high Codex bridge call; otherwise use a fresh native reviewer and report the fallback.
+2. Write a self-contained plan artifact in the active harness's native plan storage, including a copy of the issue body (requirements + current state): implementation and verification must be able to proceed without re-fetching the issue if the network drops mid-work. Also **post a plan summary as an issue comment** — the next session/human must be able to take over from the issue alone.
+3. Review plan validity, gaps, and alternatives in a fresh read-only `Fable 5` context. If that exact model is unavailable, use the strongest fresh native reviewer and report the fallback.
 4. Re-validate each feedback item on its merits and **accept selectively** (never wholesale), update the plan, proceed.
 
 ## 5. Implement
 
-- Preferred: run a separate Luna/xhigh Codex bridge call. Native fallback: `Agent(subagent_type: <domain agent if defined, else general-purpose>, model: "opus", run_in_background: false)`. Report the actual route.
-- Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + core repo rules (TDD RED→GREEN, commit message convention, logging conventions — whatever the repo's CLAUDE.md/AGENTS.md mandates). The subagent has no session context — put everything it needs in the prompt.
-- When repository routing uses an interactive OMP Implementer in an isolated issue worktree, start that bounded writer with `--approval-mode yolo`. Reviewers remain read-only and approval-gated by default; when the active user orchestration policy requires a `yolo` Reviewer, use its restricted tool allowlist and prompt, then verify HEAD and tracked state before and after every turn. If any role starts with the wrong approval mode, preserve its context: obtain its session path from the agent runtime, dismiss approval UI, exit with `/quit`, then restart the same pane/name/model/thinking with `--resume=<session-path>` and the required approval mode.
-- The `yolo` permission changes tool prompting, not scope or authority. An Implementer's frozen prompt must prohibit issue/PR writes, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review; only scoped worktree edits and bounded implementation checks are allowed.
+- Run exactly one bounded `Opus 5` implementation Agent. If that exact model is unavailable, use the strongest bounded implementation Agent, preserve the single-writer boundary, and report the fallback.
+- Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + the applicable repository rules. The implementation context has no session history — put everything it needs in the prompt.
+- When the implementation context is an interactive managed process, use the adapter's required approval mode and preserve that same context across restarts or remediation. Herdr-specific lifecycle handling applies only when Herdr was explicitly selected; follow `skill://herdr-orchestration` in that case.
+- An approval mode that suppresses prompts changes interaction only, not scope or authority. An Implementer's frozen prompt must prohibit issue/PR writes, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review; only scoped worktree edits and bounded implementation checks are allowed.
 - Every implementation or test change, including remediation after verification or adversarial review, returns to the same implementation context. The orchestrator, Verifier, and Reviewer never edit issue implementation files. If the Implementer cannot be resumed, Hold instead of creating a second writer or patching directly.
-- After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries alone do not count: the orchestrator must inspect exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
+- After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks run as supervised processes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries alone do not count: the orchestrator must inspect exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 - If the working tree is dirty, use a worktree — run the repo's install step right after creating it (e.g. `CI=true pnpm install --frozen-lockfile` for pnpm repos), and note that npm-script wrappers may fail in worktrees; invoke the underlying runner directly if needed.
 - Branch: follow the repo's branch conventions; default `<type>/issue-<n>-<slug>` where `<type>` matches the repo's allowed prefixes. **Always branch from the up-to-date default branch**:
   - Before branching, check `git rev-list --count origin/main..main` (after `git fetch`). If the local default branch is **ahead of origin**, those unpushed commits would ride into the PR diff — and pushing the default branch is in the forbidden column, so this is one of the few points where the skill stops to ask: present the unpushed commits and let the user choose (push main first / branch from local main anyway / branch from origin/main). Do not pick silently — if the pending work touches the same files as the issue, the base choice changes what you implement.
@@ -116,7 +116,7 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 ## 6. DoD + adversarial review gate
 
 1. Run the repo's Definition of Done (if none defined: tests + build + lint green), inspect the raw evidence, complete any required runtime verification, and confirm no verification role changed tracked files; then commit.
-2. Run adversarial review in a fresh read-only context. Prefer a separate Sol/high Codex bridge call; otherwise use fresh native reviewers and report the fallback.
+2. Run adversarial review in a fresh read-only `Fable 5` context. If that exact model is unavailable, use a fresh native reviewer and report the fallback.
 3. BLOCKING findings → re-validate each on its merits, return confirmed implementation/test changes to the same Implementer, rerun every affected automated and runtime gate, commit, and re-review. **Max 2 re-reviews** — if still unresolved, Hold (treat as a design fork).
 4. If a required verification or review gate cannot run, Hold. Never create an autonomous PR without both fresh verification evidence and independent review.
 

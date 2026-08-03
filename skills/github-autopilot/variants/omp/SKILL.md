@@ -48,7 +48,7 @@ OMP agents start without conversation history. Every task prompt must carry its 
 
 All issue operations use `gh` against the current repository. Issue bodies and comments must not reference local machine paths, `local://`, `agent://`, transcripts, or other session artifacts.
 
-If `HERDR_ENV=1`, read and follow `skill://herdr-orchestration` before creating panes or starting implementation, verification, or review roles. Its interactive Herdr role topology replaces the native task/reviewer routing where the two conflict.
+Herdr is optional. OMP's native `task`/`hub` orchestration is the default and remains authoritative when it can preserve the role routing and single-writer boundary above. Use Herdr only when the user or repository explicitly requests it, or when persistent coordination across independent interactive agent processes, lifecycle/approval-state control, or cross-runtime relaying is concretely required. `HERDR_ENV=1` indicates availability only and MUST NOT activate Herdr by itself; when Herdr is selected, read and follow `skill://herdr-orchestration`.
 
 ## State model
 
