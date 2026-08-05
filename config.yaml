@@ -28,7 +28,9 @@ skills:
     expose: [claude, codex]
   obsidian-cli:
     path: skills/obsidian-cli
-    expose: [claude, codex]
+    # claude 노출 제거: obsidian 플러그인(obsidian:obsidian-cli)과 완전 동일 내용 이중 등록이었음.
+    # codex에는 해당 플러그인이 없으므로 codex 노출은 유지.
+    expose: [codex]
   backlog:
     path: skills/backlog
     expose: [claude, codex]
@@ -50,6 +52,21 @@ skills:
   setup-github-issue-based-context:
     path: skills/setup-github-issue-based-context
     expose: [claude, codex]
+  explain-diff-html:
+    path: skills/explain-diff-html
+    expose: [claude]
+  explain-changes:
+    path: skills/explain-changes
+    expose: [claude]
+  explain-quiz:
+    path: skills/explain-quiz
+    expose: [claude]
+  explain-playground:
+    path: skills/explain-playground
+    expose: [claude]
   # codex-first:
   #   path: skills/codex-first
   #   expose: [claude]
+  autoresearch:
+    path: skills/autoresearch
+    expose: [claude]
