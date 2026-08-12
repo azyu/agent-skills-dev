@@ -46,6 +46,10 @@ skills:
   herdr:
     path: skills/herdr
     expose: [claude, codex, omp]
+  codex-review:
+    path: skills/codex-review
+    # claude 전용: Claude Code가 codex를 리뷰어로 부르는 어댑터라 codex/omp에는 의미 없음.
+    expose: [claude]
   jira-autopilot:
     path: skills/jira-autopilot
     expose: [claude, codex]
@@ -64,9 +68,11 @@ skills:
   explain-playground:
     path: skills/explain-playground
     expose: [claude]
-  # codex-first:
-  #   path: skills/codex-first
-  #   expose: [claude]
   autoresearch:
     path: skills/autoresearch
     expose: [claude]
+  humanizer:
+    # 업스트림: https://github.com/blader/humanizer (MIT). SKILL.md만 복사한 vendored 사본.
+    # 갱신은 업스트림 SKILL.md 재복사 + metadata.version 확인.
+    path: skills/humanizer
+    expose: [claude, codex, omp]
