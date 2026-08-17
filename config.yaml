@@ -33,7 +33,10 @@ skills:
     expose: [codex]
   bb-cli:
     path: skills/bb-cli
-    expose: [claude, codex]
+    # claude 노출 제거: lxp_services가 .claude/skills/bb-cli로 자체 버전을 가지며, 그쪽에만
+    # 실측 함정(pr comments --all, pr diff 플래그, write:pipeline 403)이 들어 있다. 같은 이름을
+    # 글로벌로 노출하면 프로젝트판을 가린다. codex는 프로젝트 스킬을 읽지 않으므로 노출 유지.
+    expose: [codex]
   github-autopilot:
     path: skills/github-autopilot
     expose: [claude, codex, omp]
@@ -49,13 +52,15 @@ skills:
     expose: [claude]
   jira-autopilot:
     path: skills/jira-autopilot
-    expose: [claude, codex]
+    # claude 노출 제거: lxp_services의 .claude/skills/jira-autopilot이 AC 프로젝트 워크플로와
+    # Codex 게이트 판정을 담고 있어 그쪽이 정본이다. codex는 프로젝트 스킬을 읽지 않으므로 유지.
+    expose: [codex]
   setup-github-issue-based-context:
     path: skills/setup-github-issue-based-context
     expose: [claude, codex]
-  explain-diff-html:
-    path: skills/explain-diff-html
-    expose: [claude]
+  # explain-diff-html: 항목 제거. claude가 유일한 노출 대상이었고, lxp_services의
+  # .claude/skills/explain-diff-html이 저장 위치(docs/agentic-coding/<TICKET-KEY>.html)와
+  # 한국어 본문 규칙을 담은 정본이다. skills/explain-diff-html 소스는 남겨 둔다.
   explain-changes:
     path: skills/explain-changes
     expose: [claude]
