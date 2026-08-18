@@ -47,6 +47,7 @@ Keep planning, architecture, orchestration, review, and integration on Sol/high.
 OMP agents start without conversation history. Every task prompt must carry its complete bounded contract. The main orchestrator owns GitHub state, planning decisions, verification orchestration and raw-evidence adjudication, commits, and PR creation. Implementation and review agents never self-certify completion.
 
 All issue operations use `gh` against the current repository. Issue bodies and comments must not reference local machine paths, `local://`, `agent://`, transcripts, or other session artifacts.
+When Autopilot creates a new GitHub issue, ensure the repository has an `ai-generated` label, create the issue with `--label ai-generated`, and verify the created issue contains that label. This provenance rule applies only to issues Autopilot creates; never add `ai-generated` merely because Autopilot picks, claims, or edits an existing issue. Label creation, issue creation, attachment, and verification are GitHub writes and follow the retry-and-preserve failure procedure below.
 
 Herdr is optional. OMP's native `task`/`hub` orchestration is the default and remains authoritative when it can preserve the role routing and single-writer boundary above. Use Herdr only when the user or repository explicitly requests it, or when persistent coordination across independent interactive agent processes, lifecycle/approval-state control, or cross-runtime relaying is concretely required. `HERDR_ENV=1` indicates availability only and MUST NOT activate Herdr by itself; when Herdr is selected, read and follow `skill://herdr-orchestration`.
 
@@ -62,6 +63,23 @@ Herdr is optional. OMP's native `task`/`hub` orchestration is the default and re
 | Done | closed after direct landing or PR merge |
 
 Create missing state labels before the first pick. A PR must contain `Closes #<n>`; creating a PR does not complete the issue.
+
+The `ai-generated` label is provenance metadata, not workflow state. When it is missing, create it only before creating an Autopilot issue:
+
+```bash
+gh label create ai-generated --description "Created by an AI agent"
+```
+
+Run that command only when the label is missing. Existing repositories may choose any color because color does not affect this contract.
+
+For every new issue, use this compact creation and verification recipe:
+
+```bash
+issue_url="$(gh issue create --title "$title" --body "$body" --label ai-generated)"
+gh issue view "$issue_url" --json labels | jq -e 'any(.labels[]; .name == "ai-generated")'
+```
+
+If the runtime cannot use this shell pipeline, perform an equivalent exact-match verification that the created issue contains `ai-generated`.
 
 ## Preconditions
 
