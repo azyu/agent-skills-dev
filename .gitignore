@@ -1,2 +1,5 @@
 .worktrees/
 .aider*
+# skillctl apply 산출물. 소스는 skills/ 이며 apply가 언제든 재생성한다.
+# 루트 앵커(/): 스킬 안에 rendered/ 디렉터리가 생겨도 무시되지 않게 한다.
+/rendered/
