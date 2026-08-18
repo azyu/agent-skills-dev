@@ -19,13 +19,17 @@ skills:
     expose: [claude, codex]
   resume-session:
     path: skills/resume-session
-    expose: [claude, codex]
+    # claude 노출 제거: 2026-07~08 트랜스크립트 92개에서 호출 0회이고, 같은 목적의 recap이
+    # claude에 남아 있다. codex에서는 이름이 session-resume(variants/codex frontmatter)이라 유지.
+    expose: [codex]
   setup-file-based-context:
     path: skills/setup-file-based-context
     expose: [claude, codex]
   oracle-research:
     path: skills/oracle-research
-    expose: [claude, codex]
+    # claude 노출 제거: 2026-07~08 트랜스크립트 92개에서 호출 0회. description 528자로
+    # 매 세션 비용이 큰 편이라 실사용이 확인되면 다시 올린다.
+    expose: [codex]
   obsidian-cli:
     path: skills/obsidian-cli
     # claude 노출 제거: obsidian 플러그인(obsidian:obsidian-cli)과 완전 동일 내용 이중 등록이었음.
@@ -57,24 +61,35 @@ skills:
     expose: [codex]
   setup-github-issue-based-context:
     path: skills/setup-github-issue-based-context
-    expose: [claude, codex]
+    # claude 노출 제거: 레포당 한 번 실행하는 부트스트랩이라 상주 비용 대비 발동 빈도가 낮다.
+    # 필요할 때 expose에 claude를 다시 넣고 skillctl apply 하면 된다.
+    expose: [codex]
   # explain-diff-html: 항목 제거. claude가 유일한 노출 대상이었고, lxp_services의
   # .claude/skills/explain-diff-html이 저장 위치(docs/agentic-coding/<TICKET-KEY>.html)와
   # 한국어 본문 규칙을 담은 정본이다. skills/explain-diff-html 소스는 남겨 둔다.
   explain-changes:
     path: skills/explain-changes
     expose: [claude]
+  # 아래 세 항목은 expose를 비워 보류 상태로 둔다(항목 자체는 남긴다 — 그래야 skills/ 아래
+  # 소스가 고아로 보여 삭제되지 않는다). 대체본이 다른 데 있어 항목을 지운 explain-diff-html과
+  # 다른 경우다.
   explain-quiz:
     path: skills/explain-quiz
-    expose: [claude]
+    # claude 노출 보류: 설명 흐름의 실사용 경로는 lxp_services의 explain-diff-html이고(2026-07~08
+    # 호출 3회), 퀴즈는 그 문서의 부속 단계라 상주시킬 이유가 약하다.
+    expose: []
   explain-playground:
     path: skills/explain-playground
-    expose: [claude]
+    # claude 노출 보류: explain-quiz와 같은 이유. 대화형 HTML 산출은 explain-diff-html로 커버된다.
+    expose: []
   autoresearch:
     path: skills/autoresearch
-    expose: [claude]
+    # claude 노출 보류: 측정 가능한 지표를 두고 반복 최적화할 때만 쓰는 루프인데 그런 작업이
+    # 아직 없었다. description 538자로 노출 스킬 중 최대라 비용 대비 효용이 가장 낮다.
+    expose: []
   humanizer:
     # 업스트림: https://github.com/blader/humanizer (MIT). SKILL.md만 복사한 vendored 사본.
     # 갱신은 업스트림 SKILL.md 재복사 + metadata.version 확인.
     path: skills/humanizer
-    expose: [claude, codex, omp]
+    # claude 노출 제거: 글쓰기 교정 전용이라 이 레포의 코드 작업 흐름에서 발동하지 않는다.
+    expose: [codex, omp]
