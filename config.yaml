@@ -47,6 +47,9 @@ skills:
   herdr-orchestration:
     path: skills/herdr-orchestration
     expose: [claude, codex, omp]
+  orchestrator:
+    path: skills/orchestrator
+    expose: [omp]
   herdr:
     path: skills/herdr
     expose: [claude, codex, omp]
