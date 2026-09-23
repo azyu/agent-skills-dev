@@ -1,13 +1,13 @@
 ---
 name: github-autopilot
-description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (Fable 5 planning and review, Opus 5 implementation, evidence-backed verification, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
+description: Use in Claude Code to pick one actionable GitHub issue and execute it autonomously through a gated pipeline (Fable planning and review, Opus implementation, evidence-backed verification, PR). Triggers include "다음 일감", "일감 하나 가져와서 진행", "이슈에서 하나 집어서 해줘", "next task", "github autopilot", and "autopilot". For Jira-tracked projects use jira-autopilot. If human judgment becomes necessary, record the decision needed on the issue and hold.
 ---
 
 # GitHub Autopilot — Claude Code
 
 Pick **one** actionable issue from the current repo's GitHub Issues and drive it to completion through a gated pipeline. When a judgment fork appears, record it on the issue and hold.
 
-Preferred Claude Code role routing: planning, architecture, orchestration, runtime verification, adversarial review, and integration use fresh `Fable 5` contexts; one frozen implementation uses `Opus 5`. Preserve fresh-context separation and the single-writer boundary even when an exact model assignment is temporarily unavailable, and always report the actual routing.
+Preferred Claude Code role routing: planning, architecture, orchestration, runtime verification, adversarial review, and integration use fresh `Fable` contexts; one frozen implementation uses `Opus`. Preserve fresh-context separation and the single-writer boundary even when an exact model assignment is temporarily unavailable, and always report the actual routing.
 
 All issue operations use the `gh` CLI against the current repo context. Issue bodies and comments must never reference local machine paths or session-local artifacts — the issue must stand alone for the next session or a human.
 When Autopilot creates a new GitHub issue, ensure the repository has an `ai-generated` label, create the issue with `--label ai-generated`, and verify the created issue contains that label. This provenance rule applies only to issues Autopilot creates; never add `ai-generated` merely because Autopilot picks, claims, or edits an existing issue. Label creation, issue creation, attachment, and verification are GitHub writes and follow the retry-and-preserve failure procedure below.
@@ -114,12 +114,12 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 
 1. Collect related code, docs, tests, and adjacent callers based on the issue body.
 2. Write a self-contained plan artifact in the active harness's native plan storage, including a copy of the issue body (requirements + current state): implementation and verification must be able to proceed without re-fetching the issue if the network drops mid-work. Also **post a plan summary as an issue comment** — the next session/human must be able to take over from the issue alone.
-3. Review plan validity, gaps, and alternatives in a fresh read-only `Fable 5` context. If that exact model is unavailable, use the strongest fresh native reviewer and report the fallback.
+3. Review plan validity, gaps, and alternatives in a fresh read-only `Fable` context. If that exact model is unavailable, use the strongest fresh native reviewer and report the fallback.
 4. Re-validate each feedback item on its merits and **accept selectively** (never wholesale), update the plan, proceed.
 
 ## 5. Implement
 
-- Run exactly one bounded `Opus 5` implementation Agent. If that exact model is unavailable, use the strongest bounded implementation Agent, preserve the single-writer boundary, and report the fallback.
+- Run exactly one bounded `Opus` implementation Agent. If that exact model is unavailable, use the strongest bounded implementation Agent, preserve the single-writer boundary, and report the fallback.
 - Prompt = **frozen spec**: full updated plan + issue requirements + verification commands + the applicable repository rules. The implementation context has no session history — put everything it needs in the prompt.
 - When the implementation context is an interactive managed process, use the adapter's required approval mode and preserve that same context across restarts or remediation. Herdr-specific lifecycle handling applies only when Herdr was explicitly selected; follow `skill://herdr-orchestration` in that case.
 - An approval mode that suppresses prompts changes interaction only, not scope or authority. An Implementer's frozen prompt must prohibit issue/PR writes, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review; only scoped worktree edits and bounded implementation checks are allowed.
@@ -134,7 +134,7 @@ In both cases no work context has been consumed yet, so **only at this stage** p
 ## 6. DoD + adversarial review gate
 
 1. Run the repo's Definition of Done (if none defined: tests + build + lint green), inspect the raw evidence, complete any required runtime verification, and confirm no verification role changed tracked files; then commit.
-2. Run adversarial review in a fresh read-only `Fable 5` context. If that exact model is unavailable, use a fresh native reviewer and report the fallback.
+2. Run adversarial review in a fresh read-only `Fable` context. If that exact model is unavailable, use a fresh native reviewer and report the fallback.
 3. BLOCKING findings → re-validate each on its merits, return confirmed implementation/test changes to the same Implementer, rerun every affected automated and runtime gate, commit, and re-review. **Max 2 re-reviews** — if still unresolved, Hold (treat as a design fork).
 4. If a required verification or review gate cannot run, Hold. Never create an autonomous PR without both fresh verification evidence and independent review.
 
@@ -176,6 +176,10 @@ All repo CLAUDE.md/AGENTS.md rules apply (plus personal instruction files if pre
 | Issue label/assignee/comment/close-with-evidence | Executing shared DB migrations |
 | One isolated implementation agent, optional fresh runtime Verifier, and fresh review agents | rebase/force-push/history rewrites |
 | | Changes outside the selected issue scope or creation/update of unrelated GitHub Issues |
+
+### Turn endings on an unattended run
+
+This applies when nobody is watching the session — a headless `claude -p` run or a spawned pane — and not to an interactive invocation, where the user is there to answer. A message with no tool call ends the turn, and on an unattended run nothing resumes it. Do not end a turn with: (1) a summary that announces the next step instead of taking it; (2) an offer to continue unless told otherwise; (3) a list of decisions, none of which blocks the remaining work; (4) a pause because a section finished or the turn has run long. Put status notes in the same message as the next tool call. While a background command or agent is still running, wait for its output instead of ending the turn. The legitimate endings are Hold (§7), Report (§8), and a step that needs an action the table above forbids; this paragraph relaxes none of its rows.
 
 ## Principles
 
