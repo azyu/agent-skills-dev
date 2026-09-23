@@ -15,11 +15,11 @@ Preferred phase-isolated profiles, when the controller can create separate top-l
 
 | Phase | Model | Reasoning | Shape |
 |---|---|---|---|
-| Plan and orchestration | `gpt-5.6-sol` | `high` | root; at most 3 bounded research/critique agents |
+| Plan and orchestration | `gpt-6-sol` | `high` | root; at most 3 bounded research/critique agents |
 | Implementation | `gpt-5.6-luna` | `xhigh` | separate top-level worker; one mutable worktree |
-| Adversarial review and integration | `gpt-5.6-sol` | `high` | separate read-only root with 3 focused reviewers; root integrates |
+| Adversarial review and integration | `gpt-6-sol` | `high` | separate read-only root with 3 focused reviewers; root integrates |
 
-A normal Codex invocation cannot change descendants to those per-role profiles. In that case use `gpt-5.6-sol` with `high` reasoning for the entire tree. Preserve role separation with fresh bounded subagent contexts; never misreport this fallback as Luna/xhigh implementation.
+A normal Codex invocation cannot change descendants to those per-role profiles. In that case use `gpt-6-sol` with `high` reasoning for the entire tree. Preserve role separation with fresh bounded subagent contexts; never misreport this fallback as Luna/xhigh implementation.
 
 Use Multi-agent only for independent bounded work. Plan → implementation → review is an ordered pipeline and must remain sequential. Never let concurrent agents edit the same worktree.
 

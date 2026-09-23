@@ -13,9 +13,9 @@ Preferred phase-isolated profiles when the controller can create separate top-le
 
 | Phase | Model | Reasoning | Shape |
 |---|---|---|---|
-| Planning, architecture, orchestration | `gpt-5.6-sol` | `high` | root; bounded read-only research |
+| Planning, architecture, orchestration | `gpt-6-sol` | `high` | root; bounded read-only research |
 | Implementation, execution | `gpt-5.6-luna` | `xhigh` | separate top-level worker; one worktree |
-| Review, integration | `gpt-5.6-sol` | `high` | fresh read-only root; root integrates |
+| Review, integration | `gpt-6-sol` | `high` | fresh read-only root; root integrates |
 
 A normal Codex hosted tree gives the root and descendants the same request model and reasoning. When phase-specific top-level calls are unavailable, use Sol/high for the tree, preserve role separation with fresh bounded contexts, and report the fallback. Never claim Luna/xhigh implementation when it did not run.
 

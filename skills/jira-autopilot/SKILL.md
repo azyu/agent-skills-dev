@@ -13,9 +13,9 @@ Preferred phase routing when a Codex bridge can create separate top-level calls:
 
 | Phase | Model | Reasoning |
 |---|---|---|
-| Planning, architecture, orchestration | `gpt-5.6-sol` | `high` |
+| Planning, architecture, orchestration | `gpt-6-sol` | `high` |
 | Implementation, execution | `gpt-5.6-luna` | `xhigh` |
-| Review, integration | `gpt-5.6-sol` | `high` |
+| Review, integration | `gpt-6-sol` | `high` |
 
 Claude Code cannot assign OpenAI models to native `Agent` descendants. Without a Codex bridge, preserve the same separation with the strongest available planning/review context, one bounded implementation agent, and fresh review agents. Report the actual routing; never claim the preferred profile when it was not used.
 

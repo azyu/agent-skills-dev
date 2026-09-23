@@ -19,11 +19,11 @@ Apply this user-level policy only when the user, repository, or active workflow 
 
 | Role | Runtime | Authority |
 |---|---|---|
-| Orchestrator | `gpt-5.6-sol`, `high` | scope, contracts, raw-evidence adjudication, integration |
+| Orchestrator | `gpt-6-sol`, `high` | scope, contracts, raw-evidence adjudication, integration |
 | Implementer | `gpt-5.6-luna`, `xhigh`, `yolo` | the only implementation/test writer |
 | Automated checks | process panes, no Agent | deterministic tests, lint, builds, static checks |
-| Verifier | fresh `gpt-5.6-sol`, `high`, `yolo` | runtime/browser acceptance observations only |
-| Reviewer | fresh `gpt-5.6-sol`, `high`, `yolo` | read-only adversarial review |
+| Verifier | fresh `gpt-6-sol`, `high`, `yolo` | runtime/browser acceptance observations only |
+| Reviewer | fresh `gpt-6-sol`, `high`, `yolo` | read-only adversarial review |
 
 Immediately label every new pane by role before starting its agent or command:
 
@@ -81,7 +81,7 @@ Use a fresh Verifier only for runtime, browser, accessibility, or other acceptan
 
 ```bash
 herdr agent start verifier --kind omp --pane <pane-id> -- \
-  --model gpt-5.6-sol --thinking high \
+  --model gpt-6-sol --thinking high \
   --tools read,write --approval-mode yolo
 ```
 
@@ -95,7 +95,7 @@ Start the final Reviewer only after implementation and verification settle. A di
 
 ```bash
 herdr agent start reviewer --kind omp --pane <pane-id> -- \
-  --model gpt-5.6-sol --thinking high \
+  --model gpt-6-sol --thinking high \
   --tools read,grep,glob,bash --approval-mode yolo
 ```
 
