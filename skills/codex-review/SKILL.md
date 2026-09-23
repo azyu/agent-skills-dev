@@ -40,11 +40,26 @@ Scope — pick one, default `--uncommitted`:
 
 Options: `--mode adversarial` swaps in the challenge-the-design framing from
 `references/adversarial-prompt.md`; `--focus "<text>"` appends reviewer instructions;
-`--model <name>` overrides the Codex model; `--keep-pane` leaves the pane open;
+`--model <name>` overrides the Codex model (default `gpt-6-sol`); `--effort <level>`
+overrides reasoning effort (default `medium`); `--keep-pane` leaves the pane open;
 `--timeout-ms <n>` raises the 15-minute default.
 
 Exit code is Codex's own. On a nonzero exit the script keeps the pane open and prints the
 report path on stderr — hand both to the user rather than retrying blindly.
+
+### Model selection
+
+The script defaults to `-m gpt-6-sol` with `model_reasoning_effort=medium`, overriding
+`~/.codex/config.toml`. Observed 2026-08-25 on codex-cli 0.149.1 with a ChatGPT account:
+
+- `gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-max` — rejected with HTTP 400
+  `"The '<name>' model is not supported when using Codex with a ChatGPT account."`
+  They are not fallbacks; do not retry a capacity failure with them.
+- `gpt-5.6-luna` (the config default) — valid, but returned
+  `ERROR: Selected model is at capacity. Please try a different model.` on three of four runs.
+
+So a capacity failure is retried by waiting or by naming another *supported* model, not by
+guessing a `-codex` suffix.
 
 ## Three behaviors this script works around
 

@@ -12,7 +12,11 @@ SCOPE_REF=""
 FOCUS=""
 KEEP_PANE=0
 TIMEOUT_MS=900000
-MODEL=""
+# ChatGPT-account Codex rejects gpt-5-codex / gpt-5.1-codex / gpt-5.1-codex-max with
+# "model is not supported when using Codex with a ChatGPT account". gpt-6-sol is the
+# supported alternative when the config default (gpt-5.6-luna) reports "at capacity".
+MODEL="gpt-6-sol"
+EFFORT="medium"
 
 usage() {
   cat <<'USAGE'
@@ -26,7 +30,8 @@ Scope (default --uncommitted):
 Options:
   --mode review|adversarial   review framing (default: review)
   --focus "<text>"            extra reviewer instructions
-  --model <name>              codex model override
+  --model <name>              codex model override (default: gpt-6-sol)
+  --effort <level>            reasoning effort (default: medium)
   --timeout-ms <n>            pane wait timeout (default: 900000)
   --keep-pane                 leave the pane open even on success
 USAGE
@@ -40,6 +45,7 @@ while [ $# -gt 0 ]; do
     --commit) SCOPE_KIND=commit; SCOPE_REF="${2:?--commit needs a sha}"; shift 2 ;;
     --focus) FOCUS="${2:?--focus needs text}"; shift 2 ;;
     --model) MODEL="${2:?--model needs a name}"; shift 2 ;;
+    --effort) EFFORT="${2:?--effort needs a level}"; shift 2 ;;
     --timeout-ms) TIMEOUT_MS="${2:?--timeout-ms needs a number}"; shift 2 ;;
     --keep-pane) KEEP_PANE=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -146,6 +152,7 @@ else
   CMD=(codex exec review "${SCOPE_ARGS[@]}" -o "$OUT_FILE")
 fi
 [ -n "$MODEL" ] && CMD+=(-m "$MODEL")
+[ -n "$EFFORT" ] && CMD+=(-c "model_reasoning_effort=\"$EFFORT\"")
 [ -n "$PROMPT_FILE" ] && CMD+=(-)  # `codex exec -` reads the prompt from stdin
 
 RUN_LINE="$(printf '%q ' "${CMD[@]}")"
