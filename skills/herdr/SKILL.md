@@ -198,9 +198,8 @@ plugin (github.com/azyu/herdr-agent-auto-naming) on `pane.agent_detected` and
   (`herdr pane rename <pane_id> Reviewer`) is safe and survives restarts.
 - The plugin only mints for a pane with no label and an agent with no name; an existing
   pane label, or an agent named by `herdr agent start`, is left untouched.
-- **Do not add a SessionStart hook that assigns a name.** The per-runtime hooks under
-  `~/.claude`, `~/.codex`, `~/.omp` were removed on 2026-09-08 because they minted names
-  in parallel with the plugin. A hook that only invokes the plugin's `name-all` action
+- **Do not add a per-runtime session hook (`~/.claude`, `~/.codex`, `~/.omp`) that
+  assigns a name** — it mints names in parallel with the plugin. A hook that only invokes the plugin's `name-all` action
   does not compete — the repo README carries such a hook for Claude Code, deliberately
   left uninstalled.
 - `/clear` and `/new` replace the session in place and Herdr clears the agent name **by
@@ -212,8 +211,8 @@ plugin (github.com/azyu/herdr-agent-auto-naming) on `pane.agent_detected` and
   pane's statusline changed nothing).
   `herdr plugin action invoke azyu.agent-auto-naming.name-all` restores it at once, and
   also sweeps agents that were already running when the plugin was installed.
-- Nothing announces its own name to an agent — that was the removed hooks' job. Read it
-  with `herdr agent get $HERDR_PANE_ID`.
+- Nothing announces an agent's own name to it. Read it with
+  `herdr agent get $HERDR_PANE_ID`.
 - **Naming that stops working silently is usually a client/server protocol mismatch**:
   `brew upgrade herdr` replaces the binary but the old server keeps running, and every
   `herdr` call then returns `error.code = "protocol_mismatch"`. Check `herdr pane list`

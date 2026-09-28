@@ -61,7 +61,7 @@ heredoc — the same body usually ships twice (create, then update once a link e
 and typing it twice lets the two versions drift.
 
 In lxp_services the project's own `.claude/skills/bb-cli` and
-`docs/guides/cli-quirks.md` (PR #3367) carry more measured traps and take precedence.
+`docs/guides/cli-quirks.md` carry more measured traps and take precedence.
 
 ## Command Groups
 
