@@ -1,5 +1,5 @@
 ---
-name: bb-cli
+name: bitbucket-cli
 description: "Bitbucket Cloud: inspect and operate repos, pull requests, pipelines, issues, wiki pages, and raw REST endpoints through the local bb CLI."
 metadata:
   openclaw:
@@ -35,6 +35,33 @@ bb <command> <subcommand> [flags]
 - Use `bb pr comment --parent <comment-id>` for PR comment replies.
 - Wiki commands use the repo's wiki Git remote, not a REST endpoint.
 - Runtime failures in JSON mode return JSON error envelopes; parse/help failures stay text.
+
+### Silent-failure traps (measured, azyu)
+
+These three read as success when they are not; the rest of this file is recoverable by
+`--help`, these are not.
+
+- **`bb pr comments N` without `--all` returns page 1 (10 rows) only** — on a longer PR
+  that silently drops the newest review round. Exactly 10 rows is the tell. Cross-check
+  the true total against `size` in
+  `bb api "/repositories/<ws>/<repo>/pullrequests/N/comments?pagelen=50"`; `bb pr
+  activity N` shows the newest round first.
+- **`bb pr statuses N` returning no rows means the pipeline has not registered yet, not
+  that it passed.** States are `INPROGRESS` / `SUCCESSFUL` / `FAILED` / `STOPPED`; JSON
+  adds `created_on`, `updated_on`.
+- **In a worktree-isolated session `--description "$(cat body.md)"` is refused** — the
+  guard cannot prove a command substitution is not a `git` call, and it also rejects any
+  command whose text contains `git` (a branch named `…-gitignore` is enough). Create the
+  PR with a plain literal `--description`, then set the real body by `PUT`ing
+  `{"title", "description"}`:
+  `bb api "/repositories/<ws>/<repo>/pullrequests/N" --method PUT --input body.json`.
+
+Write a PR or comment body to a file and pass `"$(cat <file>)"` rather than an inline
+heredoc — the same body usually ships twice (create, then update once a link exists),
+and typing it twice lets the two versions drift.
+
+In lxp_services the project's own `.claude/skills/bb-cli` and
+`docs/guides/cli-quirks.md` (PR #3367) carry more measured traps and take precedence.
 
 ## Command Groups
 

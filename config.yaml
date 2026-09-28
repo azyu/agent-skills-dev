@@ -37,10 +37,12 @@ skills:
     expose: [codex]
   bb-cli:
     path: skills/bb-cli
-    # claude 노출 제거: lxp_services가 .claude/skills/bb-cli로 자체 버전을 가지며, 그쪽에만
-    # 실측 함정(pr comments --all, pr diff 플래그, write:pipeline 403)이 들어 있다. 같은 이름을
-    # 글로벌로 노출하면 프로젝트판을 가린다. codex는 프로젝트 스킬을 읽지 않으므로 노출 유지.
-    expose: [codex]
+    # 2026-09-21 claude 재노출. 이전에 뺀 이유(전역 bb-cli가 lxp_services의 프로젝트판을
+    # 가린다)는 유효하지만, frontmatter name을 bitbucket-cli로 바꿔 이름 충돌 자체를 없앴다.
+    # 렌더 디렉터리는 frontmatter name을 따르므로 lxp_services의 .claude/skills/bb-cli는
+    # 그대로 우선한다. 재노출 목적은 lxp 밖 Bitbucket 레포(bitbucket-cli 등)에서의 커버리지 —
+    # 그 전에는 rules/tools.md가 명령표 24줄을 매 세션 들고 있었다.
+    expose: [claude, codex]
   github-autopilot:
     path: skills/github-autopilot
     expose: [claude, codex, omp]

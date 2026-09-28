@@ -184,6 +184,44 @@ Use `--format ansi` when colors and terminal styling are evidence. Otherwise use
 
 After that failed read, ask the agent to write its complete response as Markdown in a temporary directory and reply only with the file path, then read the file directly. Use this only as a fallback; do not request file output in the initial prompt.
 
+## Agent naming in this setup (azyu)
+
+Naming is automatic for every runtime Herdr detects, via the `azyu.agent-auto-naming`
+plugin (github.com/azyu/herdr-agent-auto-naming) on `pane.agent_detected` and
+`pane.agent_status_changed`.
+
+- Agents are named `$word-$word` (`blue-fox`, `crispy-toast`) so they work as CLI
+  targets; pane IDs like `wK:p8` stop being readable past three or four agents.
+- **The pane label is the durable identity, the agent name is rebound from it.** The
+  agent name belongs to the pane's current occupant and dies when that agent exits;
+  `herdr pane rename <pane_id> <label>` persists on the pane. Labelling a pane by role
+  (`herdr pane rename <pane_id> Reviewer`) is safe and survives restarts.
+- The plugin only mints for a pane with no label and an agent with no name; an existing
+  pane label, or an agent named by `herdr agent start`, is left untouched.
+- **Do not add a SessionStart hook that assigns a name.** The per-runtime hooks under
+  `~/.claude`, `~/.codex`, `~/.omp` were removed on 2026-09-08 because they minted names
+  in parallel with the plugin. A hook that only invokes the plugin's `name-all` action
+  does not compete — the repo README carries such a hook for Claude Code, deliberately
+  left uninstalled.
+- `/clear` and `/new` replace the session in place and Herdr clears the agent name **by
+  design** (herdrdev/herdr#1915, closed as intended). No event marks the swap, but the
+  pane label survives and the plugin rebinds on the pane's next status change. For codex
+  and omp that is the next prompt; for Claude Code it is the next turn that **uses a
+  tool** — Herdr reads that runtime's status off the screen and a text-only turn never
+  registers as `working` (0 of 120 polls, measured 2026-09-20 on 0.9.1; disabling the
+  pane's statusline changed nothing).
+  `herdr plugin action invoke azyu.agent-auto-naming.name-all` restores it at once, and
+  also sweeps agents that were already running when the plugin was installed.
+- Nothing announces its own name to an agent — that was the removed hooks' job. Read it
+  with `herdr agent get $HERDR_PANE_ID`.
+- **Naming that stops working silently is usually a client/server protocol mismatch**:
+  `brew upgrade herdr` replaces the binary but the old server keeps running, and every
+  `herdr` call then returns `error.code = "protocol_mismatch"`. Check `herdr pane list`
+  and compare `herdr --version` against the server's start time
+  (`ps -Ao pid,lstart,command | grep "[h]erdr server"`) before suspecting the plugin.
+  Recovery is `herdr server stop` then `herdr`, which exits every pane process — ask
+  first.
+
 ## Safety and coordination rules
 
 - Use `--no-focus` for background work unless the user asked to switch context.
