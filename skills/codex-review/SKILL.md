@@ -40,7 +40,7 @@ Scope — pick one, default `--uncommitted`:
 
 Options: `--mode adversarial` swaps in the challenge-the-design framing from
 `references/adversarial-prompt.md`; `--focus "<text>"` appends reviewer instructions;
-`--model <name>` overrides the Codex model (default `gpt-6-sol`); `--effort <level>`
+`--model <name>` overrides the Codex model (default `gpt-6.1-sol`); `--effort <level>`
 overrides reasoning effort (default `medium`); `--keep-pane` leaves the pane open;
 `--timeout-ms <n>` raises the 15-minute default.
 
@@ -49,7 +49,7 @@ report path on stderr — hand both to the user rather than retrying blindly.
 
 ### Model selection
 
-The script defaults to `-m gpt-6-sol` with `model_reasoning_effort=medium`, overriding
+The script defaults to `-m gpt-6.1-sol` with `model_reasoning_effort=medium`, overriding
 `~/.codex/config.toml`. Observed 2026-08-25 on codex-cli 0.149.1 with a ChatGPT account:
 
 - `gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-max` — rejected with HTTP 400

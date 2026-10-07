@@ -13,9 +13,9 @@ FOCUS=""
 KEEP_PANE=0
 TIMEOUT_MS=900000
 # ChatGPT-account Codex rejects gpt-5-codex / gpt-5.1-codex / gpt-5.1-codex-max with
-# "model is not supported when using Codex with a ChatGPT account". gpt-6-sol is the
+# "model is not supported when using Codex with a ChatGPT account". gpt-6.1-sol is the
 # supported alternative when the config default (gpt-5.6-luna) reports "at capacity".
-MODEL="gpt-6-sol"
+MODEL="gpt-6.1-sol"
 EFFORT="medium"
 
 usage() {
@@ -30,7 +30,7 @@ Scope (default --uncommitted):
 Options:
   --mode review|adversarial   review framing (default: review)
   --focus "<text>"            extra reviewer instructions
-  --model <name>              codex model override (default: gpt-6-sol)
+  --model <name>              codex model override (default: gpt-6.1-sol)
   --effort <level>            reasoning effort (default: medium)
   --timeout-ms <n>            pane wait timeout (default: 900000)
   --keep-pane                 leave the pane open even on success
