@@ -98,3 +98,7 @@ skills:
     path: skills/humanizer
     # claude 노출 제거: 글쓰기 교정 전용이라 이 레포의 코드 작업 흐름에서 발동하지 않는다.
     expose: [codex, omp]
+  ak-plain:
+    path: skills/ak-plain
+    # Burntgogi/kar-plain v0.2.0 (MIT) renamed. Explicit invocation only (disable-model-invocation).
+    expose: [claude, codex]
