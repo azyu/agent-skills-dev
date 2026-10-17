@@ -100,6 +100,8 @@ Use isolation when the checkout is dirty. Branch from the fetched remote default
 
 The main inspects the result and directly runs the changed path, relevant tests, build, and lint. Agent output is not evidence.
 
+When the repository has a project-local verification skill (`verify-*`), drive the changed user-facing path through it and cite its evidence location in the PR; otherwise state in the PR that none exists. Creating or repairing that skill is out of scope for this run.
+
 ## 6. Adversarial review
 
 After verification passes, batch three fresh read-only `reviewer` agents on Sol/high for non-trivial changes:
@@ -109,6 +111,8 @@ After verification passes, batch three fresh read-only `reviewer` agents on Sol/
 3. Contract and observable test coverage.
 
 They receive only Jira requirements, the frozen plan, base branch, diff, changed code, and verification evidence. Each finding includes severity, evidence, file/line, plausible failure, and verification method. The main rejects speculation, confirms findings, sends fixes to one Luna/xhigh agent, reruns verification, and repeats review at most twice.
+
+When a confirmed finding repeats a mistake class already seen in this repository (earlier review comments, reverts, or existing agent rules), name the class and the highest level that would prevent it (architecture, then types, then lint/CI, then test, then prose) as a follow-up in the final report. Do not apply that enforcement in this run.
 
 A trivial mechanical change may use one reviewer and must report that reduced shape.
 

@@ -107,6 +107,8 @@ Branch from the fetched remote default branch. Follow repository conventions; ot
 
 After implementation, the orchestrator inspects the result and directly runs the changed path plus relevant tests, build, and lint. Agent claims are not evidence.
 
+When the repository has a project-local verification skill (`verify-*`), drive the changed user-facing path through it and cite its evidence location in the PR; otherwise state in the PR that none exists. Creating or repairing that skill is out of scope for this run.
+
 ## 6. Adversarial review
 
 Review from fresh context using only the Jira requirements, frozen plan, base branch, diff, changed code, and verification evidence.
@@ -118,6 +120,8 @@ For non-trivial changes, use three read-only reviews:
 3. Contract and observable test coverage.
 
 Every finding includes severity, evidence, file/line, plausible failure, and verification method. The orchestrator rejects unsupported speculation, fixes confirmed blockers through one implementation agent, reruns verification, and repeats review at most twice.
+
+When a confirmed finding repeats a mistake class already seen in this repository (earlier review comments, reverts, or existing agent rules), name the class and the highest level that would prevent it (architecture, then types, then lint/CI, then test, then prose) as a follow-up in the final report. Do not apply that enforcement in this run.
 
 ## 7. Hold
 

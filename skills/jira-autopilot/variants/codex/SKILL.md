@@ -89,6 +89,8 @@ Branch from the fetched remote default branch using repository conventions, othe
 
 After implementation, the root directly runs the changed path and relevant tests, build, and lint. Worker claims are not evidence.
 
+When the repository has a project-local verification skill (`verify-*`), drive the changed user-facing path through it and cite its evidence location in the PR; otherwise state in the PR that none exists. Creating or repairing that skill is out of scope for this run.
+
 ## 6. Adversarial review
 
 Use a fresh Sol/high context that receives only the Jira requirements, frozen plan, base branch, diff, changed code, and verification evidence.
@@ -100,6 +102,8 @@ For non-trivial changes, run three read-only reviewers:
 3. Contract and observable test coverage.
 
 Every finding includes severity, evidence, file/line, plausible failure, and verification method. The review root deduplicates findings and rejects speculation. Re-validate blockers, fix confirmed findings through one implementation worker, rerun verification, and re-review at most twice.
+
+When a confirmed finding repeats a mistake class already seen in this repository (earlier review comments, reverts, or existing agent rules), name the class and the highest level that would prevent it (architecture, then types, then lint/CI, then test, then prose) as a follow-up in the final report. Do not apply that enforcement in this run.
 
 A trivial mechanical change may use one reviewer and must report that reduced shape. Escalate review above high only for security, tenant isolation, irreversible data, or corruption risk.
 

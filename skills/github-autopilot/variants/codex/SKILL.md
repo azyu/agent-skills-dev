@@ -145,6 +145,8 @@ Fetch before branching. If the local default branch is ahead of its remote, pres
 
 After implementation settles, obtain fresh raw verification evidence. Deterministic tests, lint, builds, and static checks may run in supervised process panes; a runtime scenario requiring judgment may run in a fresh read-only Verifier. Agent summaries are not evidence: the orchestrator inspects exact commands, exit codes, raw output, runtime observations, and pre/post tracked state.
 
+When the repository has a project-local verification skill (`verify-*`), drive the changed user-facing path through it and cite its evidence location in the PR; otherwise state in the PR that none exists. Creating or repairing that skill is out of scope for this run.
+
 ## 6. Adversarial review
 
 Review must use a fresh context that receives only the frozen requirements, base branch, diff, changed code, and verification evidence. It must not receive the implementer's rationale except where recorded as a requirement.
@@ -160,6 +162,8 @@ Spawn exactly three read-only reviewers when the change is non-trivial:
 Each finding must include severity, evidence, file/line reference, plausible failure scenario, and verification method. The review root deduplicates findings and rejects unsupported speculation.
 
 Re-validate every blocking finding against code. Return confirmed implementation/test changes to the same implementation context, rerun every affected automated and runtime gate, and repeat review at most twice. If the implementation context cannot be resumed or confirmed blockers remain after two re-reviews, hold. Escalate review above `high` only for security, irreversible data, tenant isolation, or corruption risk.
+
+When a confirmed finding repeats a mistake class already seen in this repository (earlier review comments, reverts, or existing agent rules), name the class and the highest level that would prevent it (architecture, then types, then lint/CI, then test, then prose) as a follow-up in the final report. Do not apply that enforcement in this run.
 
 ## 7. Hold
 
