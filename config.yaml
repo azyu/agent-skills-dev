@@ -55,6 +55,10 @@ skills:
   herdr:
     path: skills/herdr
     expose: [claude, codex, omp]
+  prior-art:
+    path: skills/prior-art
+    # "만들고 싶어" 요청이 주로 codex/omp 세션에서 시작되므로 세 하네스 모두 노출한다.
+    expose: [claude, codex, omp]
   codex-review:
     path: skills/codex-review
     # claude 전용: Claude Code가 codex를 리뷰어로 부르는 어댑터라 codex/omp에는 의미 없음.
