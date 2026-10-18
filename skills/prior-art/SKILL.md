@@ -59,6 +59,9 @@ not "what should the design look like". Design comes after, and only if the verd
 
    Pick one and say why. Do not hand back a menu.
 
+   Do not stop for scoping or design questions before the verdict. The search does not
+   depend on them; list them as open questions after the verdict instead.
+
 ## Output
 
 Report in the user's language:
@@ -68,6 +71,8 @@ Report in the user's language:
 3. For `extend` / `reference` / `build`: the gap that justifies writing code, stated so the
    next design step can start from it.
 4. What was searched (queries and sources), so "nothing found" is checkable.
+
+End the turn after the report. Design or build only after the user responds to the verdict.
 
 When the project directory exists and the user is moving on to build, offer to save the
 report as `docs/prior-art.md`; do not write it unasked.
