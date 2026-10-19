@@ -205,10 +205,11 @@ plugin (github.com/azyu/herdr-agent-auto-naming) on `pane.agent_detected` and
 - `/clear` and `/new` replace the session in place and Herdr clears the agent name **by
   design** (herdrdev/herdr#1915, closed as intended). No event marks the swap, but the
   pane label survives and the plugin rebinds on the pane's next status change. For codex
-  and omp that is the next prompt; for Claude Code it is the next turn that **uses a
-  tool** — Herdr reads that runtime's status off the screen and a text-only turn never
-  registers as `working` (0 of 120 polls, measured 2026-09-20 on 0.9.1; disabling the
-  pane's statusline changed nothing).
+  and omp that is the next prompt. For Claude Code it is usually within seconds of the
+  command (4 of 5 runs), otherwise the next turn — a text-only turn now registers as
+  `working` too (measured 2026-10-16 on herdr 0.9.5 with Claude Code 2.1.301; on 0.9.1
+  it did not, 0 of 120 polls, so recovery then waited for a tool-using turn). Herdr's
+  name-clearing code and plugin event set are unchanged since 0.9.1.
   `herdr plugin action invoke azyu.agent-auto-naming.name-all` restores it at once, and
   also sweeps agents that were already running when the plugin was installed.
 - Nothing announces an agent's own name to it. Read it with
