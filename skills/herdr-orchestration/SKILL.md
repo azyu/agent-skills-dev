@@ -20,7 +20,7 @@ Apply this user-level policy only when the user, repository, or active workflow 
 | Role | Runtime | Authority |
 |---|---|---|
 | Orchestrator | `gpt-6-sol`, `high` | scope, contracts, raw-evidence adjudication, integration |
-| Implementer | `gpt-5.6-luna`, `xhigh`, `yolo` | the only implementation/test writer |
+| Implementer | `gpt-6-luna`, `xhigh`, `yolo` | the only implementation/test writer |
 | Automated checks | process panes, no Agent | deterministic tests, lint, builds, static checks |
 | Verifier | fresh `gpt-6-sol`, `high`, `yolo` | runtime/browser acceptance observations only |
 | Reviewer | fresh `gpt-6.1-sol`, `high`, `yolo` | read-only adversarial review |
@@ -54,7 +54,7 @@ Start one bounded writer in the isolated task worktree:
 
 ```bash
 herdr agent start implementer --kind omp --pane <pane-id> -- \
-  --model gpt-5.6-luna --thinking xhigh --approval-mode yolo
+  --model gpt-6-luna --thinking xhigh --approval-mode yolo
 ```
 
 The frozen prompt must forbid issue/PR operations, commits, pushes, branch/history changes, destructive or external writes, nested subagents, and self-review. It may edit only the frozen implementation and test scope and run bounded implementation checks.

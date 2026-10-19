@@ -12,7 +12,7 @@ Pick exactly one actionable Jira work item for the current repository and drive 
 | Role | OMP selector | Responsibility |
 |---|---|---|
 | Main planning and orchestration | `openai-codex/gpt-6-sol:high` | scope, state, evidence, final ruling |
-| Implementation `task` agent | `openai-codex/gpt-5.6-luna:xhigh` | one bounded writable change |
+| Implementation `task` agent | `openai-codex/gpt-6-luna:xhigh` | one bounded writable change |
 | `reviewer` agent and integration | `openai-codex/gpt-6.1-sol:high` | read-only adversarial review; main integrates |
 
 Required routing:
@@ -21,12 +21,12 @@ Required routing:
 modelRoles:
   default: openai-codex/gpt-6-sol:high
   plan: openai-codex/gpt-6-sol:high
-  task: openai-codex/gpt-5.6-luna:xhigh
+  task: openai-codex/gpt-6-luna:xhigh
   advisor: openai-codex/gpt-6-sol:high
 
 task:
   agentModelOverrides:
-    task: openai-codex/gpt-5.6-luna:xhigh
+    task: openai-codex/gpt-6-luna:xhigh
     reviewer: openai-codex/gpt-6.1-sol:high
 ```
 

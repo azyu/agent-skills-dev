@@ -15,10 +15,10 @@ Use OMP's native role and per-agent routing:
 |---|---|---|
 | Main orchestration | `openai-codex/gpt-6-sol:high` | state transitions, evidence, final ruling |
 | Plan | `openai-codex/gpt-6-sol:high` | scope, invariants, frozen contract |
-| Implementation `task` agent | `openai-codex/gpt-5.6-luna:xhigh` | one bounded writable change |
+| Implementation `task` agent | `openai-codex/gpt-6-luna:xhigh` | one bounded writable change |
 | `reviewer` agent | `openai-codex/gpt-6.1-sol:high` | read-only adversarial review |
 | Runtime Verifier | `openai-codex/gpt-6-sol:high` | fresh runtime/browser acceptance observations only |
-| `scout` | `openai-codex/gpt-5.6-luna:medium` | read-only code mapping |
+| `scout` | `openai-codex/gpt-6-luna:medium` | read-only code mapping |
 | `librarian` | `openai-codex/gpt-5.6-terra:medium` | source-verified external API research |
 
 Required settings:
@@ -28,17 +28,17 @@ modelRoles:
   default: openai-codex/gpt-6-sol:high
   plan: openai-codex/gpt-6-sol:high
   slow: openai-codex/gpt-6-sol:xhigh
-  task: openai-codex/gpt-5.6-luna:xhigh
+  task: openai-codex/gpt-6-luna:xhigh
   advisor: openai-codex/gpt-6-sol:high
-  smol: openai-codex/gpt-5.6-luna:low
-  commit: openai-codex/gpt-5.6-luna:low
-  tiny: openai-codex/gpt-5.6-luna:minimal
+  smol: openai-codex/gpt-6-luna:low
+  commit: openai-codex/gpt-6-luna:low
+  tiny: openai-codex/gpt-6-luna:minimal
 
 task:
   agentModelOverrides:
-    task: openai-codex/gpt-5.6-luna:xhigh
+    task: openai-codex/gpt-6-luna:xhigh
     reviewer: openai-codex/gpt-6.1-sol:high
-    scout: openai-codex/gpt-5.6-luna:medium
+    scout: openai-codex/gpt-6-luna:medium
     librarian: openai-codex/gpt-5.6-terra:medium
 ```
 
