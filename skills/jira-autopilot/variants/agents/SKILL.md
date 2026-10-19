@@ -13,7 +13,7 @@ Pick exactly one actionable Jira work item for the current repository and drive 
 |---|---|---|
 | Main planning and orchestration | `openai-codex/gpt-6-sol:high` | scope, state, evidence, final ruling |
 | Implementation `task` agent | `openai-codex/gpt-5.6-luna:xhigh` | one bounded writable change |
-| `reviewer` agent and integration | `openai-codex/gpt-6-sol:high` | read-only adversarial review; main integrates |
+| `reviewer` agent and integration | `openai-codex/gpt-6.1-sol:high` | read-only adversarial review; main integrates |
 
 Required routing:
 
@@ -27,7 +27,7 @@ modelRoles:
 task:
   agentModelOverrides:
     task: openai-codex/gpt-5.6-luna:xhigh
-    reviewer: openai-codex/gpt-6-sol:high
+    reviewer: openai-codex/gpt-6.1-sol:high
 ```
 
 Keep OMP Advisor disabled for routine runs because the explicit review phase covers the same gate. Escalate review above high only for security, tenant isolation, irreversible data, or corruption risk.

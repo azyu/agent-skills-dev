@@ -16,7 +16,7 @@ Use OMP's native role and per-agent routing:
 | Main orchestration | `openai-codex/gpt-6-sol:high` | state transitions, evidence, final ruling |
 | Plan | `openai-codex/gpt-6-sol:high` | scope, invariants, frozen contract |
 | Implementation `task` agent | `openai-codex/gpt-5.6-luna:xhigh` | one bounded writable change |
-| `reviewer` agent | `openai-codex/gpt-6-sol:high` | read-only adversarial review |
+| `reviewer` agent | `openai-codex/gpt-6.1-sol:high` | read-only adversarial review |
 | Runtime Verifier | `openai-codex/gpt-6-sol:high` | fresh runtime/browser acceptance observations only |
 | `scout` | `openai-codex/gpt-5.6-luna:medium` | read-only code mapping |
 | `librarian` | `openai-codex/gpt-5.6-terra:medium` | source-verified external API research |
@@ -37,7 +37,7 @@ modelRoles:
 task:
   agentModelOverrides:
     task: openai-codex/gpt-5.6-luna:xhigh
-    reviewer: openai-codex/gpt-6-sol:high
+    reviewer: openai-codex/gpt-6.1-sol:high
     scout: openai-codex/gpt-5.6-luna:medium
     librarian: openai-codex/gpt-5.6-terra:medium
 ```
